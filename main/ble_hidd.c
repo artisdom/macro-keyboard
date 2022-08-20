@@ -401,7 +401,41 @@ void ble_init(void) {
     xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
 }
 
+esp_err_t ble_deinit() {
+    esp_err_t ret;
 
+    ret = esp_hidd_profile_deinit();
+    if (ret) {
+        ESP_LOGE(TAG, "%s deinit hidd profile failed\n", __func__);
+        return ret;
+    }
+
+    ret = esp_bluedroid_disable();
+    if (ret) {
+        ESP_LOGE(TAG, "%s disable bluedroid failed\n", __func__);
+        return ret;
+    }
+
+    ret = esp_bluedroid_deinit();
+    if (ret) {
+        ESP_LOGE(TAG, "deinit bluedroid failed");
+        return ret;
+    }
+
+    ret = esp_bt_controller_disable();
+    if (ret) {
+        ESP_LOGE(TAG, "disable controller failed");
+        return ret;
+    }
+
+    ret = esp_bt_controller_deinit();
+    if (ret) {
+        ESP_LOGE(TAG, "deinit controller failed");
+        return ret;
+    }
+
+    return ESP_OK;
+}
 
 
 

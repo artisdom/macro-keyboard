@@ -3,6 +3,8 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "driver/rtc_io.h"
+#include "esp_sleep.h"
 #include "esp_timer.h"
 
 #include "matrix.h"
@@ -114,5 +116,76 @@ void matrix__scan() {
     }
 
     ESP_LOGD(TAG, "%d states: %d, %d, %d", millis(), matrix_state[0][0], matrix_state[0][1], matrix_state[0][2]);
+
+}
+
+
+
+// RTC gpio matrix for deep sleep wake up
+void matrix__rtc_setup(void) {
+    uint64_t rtc_mask = 0;
+
+    ESP_LOGI(TAG, "Init RTC matrix for deep sleep");
+
+    // init columns
+    for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+        gpio_num_t pin = col_gpios[col];
+        if (rtc_gpio_is_valid_gpio(pin) == 1) {
+            rtc_gpio_init(pin);
+            rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_OUTPUT);
+            rtc_gpio_set_level(pin, 1);
+
+            ESP_LOGD(TAG,"%d is level %d", pin, gpio_get_level(pin));
+        }
+        else {
+            ESP_LOGW(TAG, "gpio column pin %d is not a valid RTC pin", pin);
+        }
+    }
+
+    // init rows
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        gpio_num_t pin = row_gpios[row];
+        if (rtc_gpio_is_valid_gpio(pin) == 1) {
+            rtc_gpio_init(pin);
+            rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_OUTPUT);
+            rtc_gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_0);
+            rtc_gpio_set_level(pin, 0);
+            rtc_gpio_wakeup_enable(pin, GPIO_INTR_HIGH_LEVEL);
+
+            // setting bit
+            rtc_mask |= 1llu << pin;
+
+            ESP_LOGD(TAG,"%d is level %d", pin, gpio_get_level(pin));
+        }
+        else {
+            ESP_LOGW(TAG, "gpio row pin %d is not a valid RTC pin", pin);
+        }
+
+        esp_sleep_enable_ext1_wakeup(rtc_mask, ESP_EXT1_WAKEUP_ANY_HIGH);
+    }
+
+}
+
+void matrix__rtc_deinit() {
+
+    // deinit rows
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        gpio_num_t pin = row_gpios[row];
+        if (rtc_gpio_is_valid_gpio(pin) == 1) {
+            rtc_gpio_set_level(pin, 0);
+            rtc_gpio_set_direction(pin, RTC_GPIO_MODE_DISABLED);
+            gpio_reset_pin(pin);
+        }
+    }
+
+    // deinit columns
+    for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+        gpio_num_t pin = col_gpios[col];
+        if (rtc_gpio_is_valid_gpio(pin) == 1) {
+            rtc_gpio_set_level(pin, 0);
+            rtc_gpio_set_direction(pin, RTC_GPIO_MODE_DISABLED);
+            gpio_reset_pin(pin);
+        }
+    }
 
 }

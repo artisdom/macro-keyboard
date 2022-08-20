@@ -9,6 +9,8 @@ A Macro keyboard built on ESP32.
 - Shift modifier: hold the shift key to access a new layout.
 - Macros: fakes multiple key presses on a single key.
 
+- Deep sleep
+
 
 ## Inspirations
 
@@ -19,10 +21,10 @@ A Macro keyboard built on ESP32.
 
 ## Todo
 
-- Deep sleep.
 - Support for multiple saved BLE hosts.
 - Cleanup keyboard layouts in separate files.
 - Put BLE stuff in it's own component/folder.
+- KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 - Better NVS stuff (layouts, configs, ...etc).
 - Battery management and reports.
 - LEDs?

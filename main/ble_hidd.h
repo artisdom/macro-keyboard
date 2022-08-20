@@ -22,6 +22,7 @@ typedef struct bt_addr_s {
 
 
 void ble_init(void);
+esp_err_t ble_deinit(void);
 void ble_keyboard_task(void *pvParameters);
 void ble_event_task(void *pvParameters);
 

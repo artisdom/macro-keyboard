@@ -20,7 +20,7 @@ extern layout_t layout_2;
 extern layout_t *keymaps[NUM_LAYOUTS];
 
 
-void 	 keyboard__init();
+void     keyboard__init();
 uint8_t *keyboard__check_state();
 
 #endif
