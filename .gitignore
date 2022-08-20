@@ -1,0 +1,26 @@
+# MacOS
+.DS_Store
+
+# C stuff
+*.o
+*.bin
+*.elf
+*.hex
+*.ld
+
+# Build Artifacts
+build
+
+# Python
+*.pyc
+__pycache__
+
+# Virtualenv
+venv/
+
+# ESP-IDF
+sdkconfig*
+
+# WIP stuff
+not_components/
+MK32/
