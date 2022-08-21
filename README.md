@@ -10,13 +10,13 @@ A Macro keyboard built on ESP32.
 - Macros: fakes multiple key presses on a single key.
 
 - Deep sleep
+- Support for multiple BLE hosts and specific key layout to switch between them.
 
 
 ## Inspirations
 
 - [QMK](https://github.com/qmk/qmk_firmware/) for AVR devices.
 - [MK32](https://github.com/Galzai/MK32) somewhat of a port of QMK.
-
 
 
 ## Todo
@@ -31,3 +31,10 @@ A Macro keyboard built on ESP32.
 - USB HID (with ESP32-S3).
 - Toggle switch between BLE and USB.
 - MIDI device?
+- Mutiple BLE hosts in parallel?
+
+
+## Issues
+
+- Potential issue when switching BLE peer: the hid report array is not propably reset.
+Should not be an issue as BLE changes are supposed to happen without other keys being pressed.

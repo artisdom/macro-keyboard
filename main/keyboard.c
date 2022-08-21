@@ -29,7 +29,7 @@ layout_t empty_layout = {
 };
 
 layout_t layout_1 = {
-    {KC_LGUI, KC_C, KC_MACRO_PASTE}
+    {KC_BLUETOOTH, KC_C, KC_MACRO_PASTE}
 };
 layout_t shift_layout_1 = {
     {KC_SHIFT, KC_G, KC_H}
@@ -213,6 +213,8 @@ uint8_t *keyboard__check_state() {
 
     uint8_t report_index;
 
+    // memset(hid_report, 0x00, sizeof(hid_report));
+
     matrix__scan();
 
     memcpy(keyboard_state, matrix_state, sizeof(matrix_state));
@@ -228,6 +230,8 @@ uint8_t *keyboard__check_state() {
 
             uint16_t keycode = keyboard__get_keycode(row, col);
             report_index = hid_report_index;
+
+            // ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
 
             if (keyboard__handle_modifier(keycode, keystate) == true) {
                 continue;
@@ -309,9 +313,11 @@ uint8_t *keyboard__check_state() {
                         key = macros[macro_id][i];
                         uint8_t modifier = keyboard__check_modifier(key);
                         if (modifier) {
+                            // ESP_LOGD(TAG, "Macro %d, ~modifier 0x%x", macro_id, modifier);
                             hid_report[0] &= ~modifier;
                         }
                         else {
+                            // ESP_LOGD(TAG, "Macro %d, removing key %d at %d", macro_id, key, report_index);
                             hid_report[report_index] = 0;
                             report_index++;
                             hid_report_index--;
@@ -326,7 +332,7 @@ uint8_t *keyboard__check_state() {
                 if (modifier) {
                     hid_report[0] &= ~modifier;
                 }
-                else {
+                if (report_index >= 2) {
                     hid_report[report_index] = 0;
                     hid_report_key_index[row][col] = 0;
                     hid_report_index--;
@@ -334,12 +340,14 @@ uint8_t *keyboard__check_state() {
 
             }
 
-            ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
+            // ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
             // ESP_LOGD(TAG, "hid report len: %d %d", hid_report_index, report_index);
         }
     }
 
     memcpy(keyboard_prev_state, keyboard_state, sizeof(keyboard_state));
+
+    hid_report[1] = 0;
 
     return hid_report;
 }

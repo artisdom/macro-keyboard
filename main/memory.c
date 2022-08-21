@@ -109,31 +109,28 @@ static uint32_t increment_counter(nvs_handle_t handle, char *key) {
 
 
 // Bluetooth hosts
-void memory__set_bluetooth_host(uint8_t host_id, bt_addr_t addr) {
+void memory__set_bluetooth_host(uint8_t host_id, bt_host_t host) {
     esp_err_t err;
-    size_t size = sizeof(bt_addr_t);
     char key[6] = "host0";
-    // key[4] = (char) host_id;
     itoa(host_id, &(key[4]), 10);
 
-    err = nvs_set_blob(ble_handle, key, &addr, size);
+    err = nvs_set_blob(ble_handle, key, &host, sizeof(bt_host_t));
     ESP_ERROR_CHECK(err);
 }
 
 
-bt_addr_t memory__get_bluetooth_host(uint8_t host_id) {
-    bt_addr_t addr;
-    size_t size = sizeof(bt_addr_t);
+bt_host_t memory__get_bluetooth_host(uint8_t host_id) {
+    bt_host_t host;
+    size_t size = sizeof(bt_host_t);
 
-    memset(&addr, 0x00, size);
+    memset(&host, 0x00, size);
 
     char key[6] = "host0";
     itoa(host_id, &(key[4]), 10);
-    // key[4] = (char) host_id;
 
-    mem_get_blob(ble_handle, key, &addr, size);
+    mem_get_blob(ble_handle, key, &host, size);
 
-    return addr;
+    return host;
 }
 
 

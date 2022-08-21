@@ -52,7 +52,9 @@ static const char *TAG = "ble_hid";
 
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
+
 static uint8_t current_host_id = 0;
+static bt_host_t current_host;
 
 static uint8_t hidd_service_uuid128[] = {
     /* LSB <--------------------------------------------------------------------------------> MSB */
@@ -104,10 +106,14 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 
 static void ble_set_host(uint8_t host_id);
+static void ble_set_host_adv_params(bt_host_t host);
+
+static uint8_t ble_get_last_host();
+static void ble_set_last_host(uint8_t host_id);
+
 static void ble_change_host(uint8_t host_id);
-static void ble_save_host(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type);
-// static uint64_t ble_addr_to_u64(esp_bd_addr_t addr);
-// static void ble_u64_to_addr(uint64_t addr, esp_bd_addr_t to_addr);
+static void ble_save_host(bt_host_t host);
+
 
 
 static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param) {
@@ -161,30 +167,25 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 	 break;
      case ESP_GAP_BLE_AUTH_CMPL_EVT:
         sec_conn = true;
-        esp_bd_addr_t bd_addr;
-        esp_ble_addr_type_t bd_addr_type;
+        bt_host_t host;
 
-        memcpy(bd_addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
-        bd_addr_type = param->ble_security.auth_cmpl.addr_type;
-        // ESP_LOGI(TAG, "remote BD address: %08x%04x",
-        //         (bd_addr[0] << 24) + (bd_addr[1] << 16) + (bd_addr[2] << 8) + bd_addr[3],
-        //         (bd_addr[4] << 8) + bd_addr[5]);
-        ESP_LOGI(TAG, "remote host address: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(bd_addr));
-        ESP_LOGI(TAG, "address type = %d", bd_addr_type);
+        memcpy(host.addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+        host.type = param->ble_security.auth_cmpl.addr_type;
+
+        ESP_LOGI(TAG, "remote host address: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(host.addr));
+        ESP_LOGI(TAG, "address type = %d", host.type);
         ESP_LOGI(TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
         if(!param->ble_security.auth_cmpl.success) {
             ESP_LOGE(TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
         }
 
-        // onyl save if address is Public or Random
-        if (bd_addr_type <= BLE_ADDR_TYPE_RANDOM) {
-            ble_save_host(bd_addr, bd_addr_type);
+        // only save if address is Public or Random
+        if (host.type <= BLE_ADDR_TYPE_RANDOM) {
+            ble_save_host(host);
         }
         else {
-            ESP_LOGW(TAG, "Unable to save host in memory as the addr type is %d", bd_addr_type);
+            ESP_LOGW(TAG, "Unable to save host in memory as the addr type is %d", host.type);
         }
-
-
         break;
     default:
         break;
@@ -193,75 +194,226 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 
 
-// Helpers
-// static uint64_t ble_addr_to_u64(esp_bd_addr_t addr) {
-//     uint64_t to_addr = (addr[0] << 40) + (addr[1] << 32) + (addr[2] << 24)
-//         + (addr[3] << 16) + (addr[4] << 8) + (addr[5]);
+static uint8_t ble_get_last_host() {
+    return memory__get_bluetooth_last_host();
+}
 
-//     return to_addr;
-// }
-
-
-// static void ble_u64_to_addr(uint64_t addr, esp_bd_addr_t to_addr) {
-
-//     for (uint8_t i = 0, j = ESP_BD_ADDR_LEN-1; i < ESP_BD_ADDR_LEN; i++, j--) {
-//         to_addr[i] = (addr >> (8 * j)) & 0xff;
-//     }   
-// }
+static void ble_set_last_host(uint8_t host_id) {
+    memory__set_bluetooth_last_host(host_id);
+}
 
 
-static void ble_set_host(uint8_t host_id) {
-
-    bt_addr_t host;
-
-    ESP_LOGI(TAG, "Setting host to %d", host_id);
-
-    host = memory__get_bluetooth_host(host_id);
+static void ble_set_host_adv_params(bt_host_t host) {
 
     memcpy(hidd_adv_params.peer_addr, host.addr, sizeof(host.addr));
     hidd_adv_params.peer_addr_type = host.type;
+    hidd_adv_params.adv_type = ADV_TYPE_DIRECT_IND_LOW;
 
-    ESP_LOGD(TAG, "peer addr: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(hidd_adv_params.peer_addr));
-    ESP_LOGD(TAG, "peer addr type: %d", hidd_adv_params.peer_addr_type);
+    ESP_LOGD(TAG, "adv peer addr: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(hidd_adv_params.peer_addr));
+    ESP_LOGD(TAG, "adv peer addr type: %d", hidd_adv_params.peer_addr_type);
 
     if (host.addr[0] == 0) { //terrible check
         ESP_LOGW(TAG, "No host stored in memory, advertising to all...");
+        hidd_adv_params.adv_type = ADV_TYPE_IND;
     }
 
 }
 
 
+static void ble_set_host(uint8_t host_id) {
+
+    bt_host_t host;
+
+    ESP_LOGI(TAG, "Setting host to %d", host_id);
+
+    host = memory__get_bluetooth_host(host_id);
+    current_host = host;
+    current_host_id = host_id;
+
+    ble_set_host_adv_params(host);
+
+}
+
+
 static void ble_change_host(uint8_t host_id) {
+    esp_err_t ret;
+    bt_host_t previous_host = current_host;
 
     ESP_LOGI(TAG, "Changing host to %d", host_id);
 
-    esp_bd_addr_t current_host;
-    memcpy(current_host, hidd_adv_params.peer_addr, sizeof(esp_bd_addr_t));
+    ESP_LOGD(TAG, "current host: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(current_host.addr));
+
+    // int bond_num = esp_ble_get_bond_device_num();
+    // ESP_LOGD(TAG, "device bond num %d", bond_num);
+    // esp_ble_bond_dev_t bond_dev[10];
+    // esp_ble_get_bond_device_list(&bond_num, bond_dev);
+
+    // ESP_LOGD(TAG, "Bond Device list:");
+    // for (uint8_t i = 0; i < bond_num; i++) {
+    //     ESP_LOGD(TAG, "%d : addr: "ESP_BD_ADDR_STR, i, ESP_BD_ADDR_HEX(bond_dev[i].bd_addr));
+    // }
+    
+
+    ret = esp_ble_gap_stop_advertising();
+    if (ret) {
+        ESP_LOGE(TAG, "gap stop advertising failed");
+        return;
+    }
 
     ble_set_host(host_id);
+    
+    ret = esp_ble_gap_disconnect(previous_host.addr);
+    if (ret) {
+        ESP_LOGE(TAG, "gap disconnect failed");
+        return;
+    }
 
-    current_host_id = host_id;
-    memory__set_bluetooth_last_host(host_id);
-
-    // TODO
-    // stop then start BT + adv
-    esp_ble_gap_stop_advertising();
-    // esp_ble_gap_disconnect(current_host);
-    // esp_ble_gap_start_advertising(&hidd_adv_params);
-
+    ret = esp_ble_gap_start_advertising(&hidd_adv_params);
+    if (ret) {
+        ESP_LOGE(TAG, "gap start advertising failed");
+        return;
+    }
 }
 
-
-static void ble_save_host(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
-    bt_addr_t host;
-
-    memcpy(host.addr, addr, sizeof(esp_bd_addr_t));
-    host.type = addr_type;
-
+static void ble_save_host(bt_host_t host) {
     ESP_LOGI(TAG, "Saving host at id %d", current_host_id);
 
-    memory__set_bluetooth_host(current_host_id, host);
+    if (memcmp(&current_host, &host, sizeof(bt_host_t)) != 0) {
+        ESP_LOGD(TAG, "Host is different, saving....");
+        memory__set_bluetooth_host(current_host_id, host);
+        ble_set_host_adv_params(host);
+    }
+    else {
+        ESP_LOGD(TAG, "Host is the same, not saving");
+    }
+    ble_set_last_host(current_host_id);
 }
+
+
+
+void ble_init(void) {
+    esp_err_t ret;
+
+    ESP_LOGI(TAG, "Init BLE");
+
+    // Create queues
+    ble_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
+    ble_event_q = xQueueCreate(32, sizeof(uint8_t));
+
+    // Initialize NVS.
+    ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    ret = esp_bt_controller_init(&bt_cfg);
+    if (ret) {
+        ESP_LOGE(TAG, "%s initialize controller failed\n", __func__);
+        return;
+    }
+
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
+    if (ret) {
+        ESP_LOGE(TAG, "%s enable controller failed\n", __func__);
+        return;
+    }
+
+    ret = esp_bluedroid_init();
+    if (ret) {
+        ESP_LOGE(TAG, "%s init bluedroid failed\n", __func__);
+        return;
+    }
+
+    ret = esp_bluedroid_enable();
+    if (ret) {
+        ESP_LOGE(TAG, "%s enable bluedroid failed\n", __func__);
+        return;
+    }
+
+    if((ret = esp_hidd_profile_init()) != ESP_OK) {
+        ESP_LOGE(TAG, "%s init hidd profile failed\n", __func__);
+    }
+
+    // set host to connect to
+    // current_host_id = memory__get_bluetooth_last_host();
+    current_host_id = ble_get_last_host();
+    ble_set_host(current_host_id);
+
+    // register the callback function to the gap module
+    esp_ble_gap_register_callback(gap_event_handler);
+    esp_hidd_register_callbacks(hidd_event_callback);
+
+    /* set the security iocap & auth_req & key size & init key response key parameters to the stack*/
+    esp_ble_auth_req_t auth_req = ESP_LE_AUTH_BOND;     //bonding with peer device after authentication
+    esp_ble_io_cap_t iocap = ESP_IO_CAP_NONE;           //set the IO capability to No output No input
+    uint8_t key_size = 16;      //the key size should be 7~16 bytes
+    uint8_t init_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
+    uint8_t rsp_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
+    esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &auth_req, sizeof(uint8_t));
+    esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
+    esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &key_size, sizeof(uint8_t));
+    /* If your BLE device act as a Slave, the init_key means you hope which types of key of the master should distribute to you,
+    and the response key means which key you can distribute to the Master;
+    If your BLE device act as a master, the response key means you hope which types of key of the slave should distribute to you,
+    and the init key means which key you can distribute to the slave. */
+    esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
+    esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
+
+    // Create tasks
+    // xTaskCreate(&hid_demo_task, "hid_task", 2048, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
+    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 8096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
+}
+
+
+esp_err_t ble_deinit() {
+    esp_err_t ret;
+
+    ESP_LOGI(TAG, "Deinit BLE");
+
+    ret = esp_hidd_profile_deinit();
+    if (ret) {
+        ESP_LOGE(TAG, "deinit hidd profile failed");
+        return ret;
+    }
+
+    ret = esp_bluedroid_disable();
+    if (ret) {
+        ESP_LOGE(TAG, "disable bluedroid failed");
+        return ret;
+    }
+
+    ret = esp_bluedroid_deinit();
+    if (ret) {
+        ESP_LOGE(TAG, "deinit bluedroid failed");
+        return ret;
+    }
+
+    ret = esp_bt_controller_disable();
+    if (ret) {
+        ESP_LOGE(TAG, "disable controller failed");
+        return ret;
+    }
+
+    ret = esp_bt_controller_deinit();
+    if (ret) {
+        ESP_LOGE(TAG, "deinit controller failed");
+        return ret;
+    }
+
+    return ESP_OK;
+}
+
+
+
+
+
+
 
 
 void ble_keyboard_task(void *pvParameters) {
@@ -270,9 +422,10 @@ void ble_keyboard_task(void *pvParameters) {
 
     ESP_LOGI(TAG, "Starting ble keyboard task");
 
-    if (ble_keyboard_q != NULL)
+    if (ble_keyboard_q != NULL) {
         ESP_LOGW(TAG, "keyboard queue not initialised, resetting...");
         xQueueReset(ble_keyboard_q);
+    }
 
     //check if queue is initialized
     if (ble_keyboard_q != NULL) {
@@ -325,117 +478,12 @@ void ble_event_task(void *pvParameters) {
 }
 
 
-void ble_init(void) {
-    esp_err_t ret;
 
-    // Create queues
-    ble_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
-    ble_event_q = xQueueCreate(32, sizeof(uint8_t));
 
-    // Initialize NVS.
-    ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK( ret );
 
-    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
-    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-    ret = esp_bt_controller_init(&bt_cfg);
-    if (ret) {
-        ESP_LOGE(TAG, "%s initialize controller failed\n", __func__);
-        return;
-    }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
-    if (ret) {
-        ESP_LOGE(TAG, "%s enable controller failed\n", __func__);
-        return;
-    }
 
-    ret = esp_bluedroid_init();
-    if (ret) {
-        ESP_LOGE(TAG, "%s init bluedroid failed\n", __func__);
-        return;
-    }
-
-    ret = esp_bluedroid_enable();
-    if (ret) {
-        ESP_LOGE(TAG, "%s enable bluedroid failed\n", __func__);
-        return;
-    }
-
-    if((ret = esp_hidd_profile_init()) != ESP_OK) {
-        ESP_LOGE(TAG, "%s init hidd profile failed\n", __func__);
-    }
-
-    // set host to connect to
-    // current_host_id = memory__get_bluetooth_last_host();
-    // ble_set_host(current_host_id);
-
-    // register the callback function to the gap module
-    esp_ble_gap_register_callback(gap_event_handler);
-    esp_hidd_register_callbacks(hidd_event_callback);
-
-    /* set the security iocap & auth_req & key size & init key response key parameters to the stack*/
-    esp_ble_auth_req_t auth_req = ESP_LE_AUTH_BOND;     //bonding with peer device after authentication
-    esp_ble_io_cap_t iocap = ESP_IO_CAP_NONE;           //set the IO capability to No output No input
-    uint8_t key_size = 16;      //the key size should be 7~16 bytes
-    uint8_t init_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
-    uint8_t rsp_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
-    esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &auth_req, sizeof(uint8_t));
-    esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
-    esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &key_size, sizeof(uint8_t));
-    /* If your BLE device act as a Slave, the init_key means you hope which types of key of the master should distribute to you,
-    and the response key means which key you can distribute to the Master;
-    If your BLE device act as a master, the response key means you hope which types of key of the slave should distribute to you,
-    and the init key means which key you can distribute to the slave. */
-    esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
-    esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
-
-    // Create tasks
-    // xTaskCreate(&hid_demo_task, "hid_task", 2048, NULL, 5, NULL);
-    xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
-    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
-}
-
-esp_err_t ble_deinit() {
-    esp_err_t ret;
-
-    ret = esp_hidd_profile_deinit();
-    if (ret) {
-        ESP_LOGE(TAG, "%s deinit hidd profile failed\n", __func__);
-        return ret;
-    }
-
-    ret = esp_bluedroid_disable();
-    if (ret) {
-        ESP_LOGE(TAG, "%s disable bluedroid failed\n", __func__);
-        return ret;
-    }
-
-    ret = esp_bluedroid_deinit();
-    if (ret) {
-        ESP_LOGE(TAG, "deinit bluedroid failed");
-        return ret;
-    }
-
-    ret = esp_bt_controller_disable();
-    if (ret) {
-        ESP_LOGE(TAG, "disable controller failed");
-        return ret;
-    }
-
-    ret = esp_bt_controller_deinit();
-    if (ret) {
-        ESP_LOGE(TAG, "deinit controller failed");
-        return ret;
-    }
-
-    return ESP_OK;
-}
 
 
 

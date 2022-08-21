@@ -15,14 +15,15 @@ extern QueueHandle_t ble_keyboard_q;
 extern QueueHandle_t ble_event_q;
 
 // Struct to store in NVS
-typedef struct bt_addr_s {
+typedef struct bt_host_s {
 	esp_bd_addr_t addr;
 	esp_ble_addr_type_t type;
-} bt_addr_t;
+} bt_host_t;
 
 
 void ble_init(void);
 esp_err_t ble_deinit(void);
+
 void ble_keyboard_task(void *pvParameters);
 void ble_event_task(void *pvParameters);
 
