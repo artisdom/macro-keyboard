@@ -12,12 +12,6 @@ A Macro keyboard built on ESP32.
 - Support for multiple BLE hosts and specific key layout to switch between them.
 
 
-## Inspirations
-
-- [QMK](https://github.com/qmk/qmk_firmware/) for AVR devices.
-- [MK32](https://github.com/Galzai/MK32) somewhat of a port of QMK for ESP32.
-
-
 ## Todo
 
 - Cleanup keyboard layouts in separate files.
@@ -29,10 +23,23 @@ A Macro keyboard built on ESP32.
 - USB HID (with ESP32-S3).
 - Toggle switch between BLE and USB.
 - MIDI device?
-- Mutiple BLE hosts in parallel?
+- Mutiple BLE hosts in parallel? + BLE 5 features?
+- If design is kept as BLE only, shift implementation to NimBLE stack (not Bluedroid).
 
 
 ## Issues
 
 - Potential issue when switching BLE host: the hid report array is not propably reset.  
 Should not be an issue as BLE host changes are supposed to happen without other keys being pressed.
+
+
+## Docs / Referencs
+
+- ESP-IDF [guide](https://docs.espressif.com/projects/esp-idf/en/v4.4.2/esp32s3/index.html).
+- [Blog](http://blog.komar.be/how-to-make-a-keyboard-the-matrix/) on matrix keyboard design. 
+- [TinyS3](https://esp32s3.com/index.html#home) board.
+
+### Inspirations
+
+- [QMK](https://github.com/qmk/qmk_firmware/) for AVR devices.
+- [MK32](https://github.com/Galzai/MK32) somewhat of a port of QMK for ESP32.

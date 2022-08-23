@@ -27,10 +27,11 @@
 /* --------- Global configs --------- */
 #define DEEP_SLEEP_ENABLED  (1)
 #define DEEP_SLEEP_TIMEOUT  (120) //in seconds 
+#define USB_ENABLED         (1) // enable hid over usb
 
 
 /* --------- Led matrix configs --------- */
-#define LED_ENABLED         (1)
+#define LED_ENABLED         (0)
 #define LED_ROWS 			(3)
 #define LED_COLS            (1)
 

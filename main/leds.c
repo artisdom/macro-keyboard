@@ -23,8 +23,8 @@
 /* --------- Local Variables --------- */
 static const char *TAG = "leds";
 
-static const gpio_num_t row_gpios[LED_ROWS] = {GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_33};
-static const gpio_num_t col_gpios[LED_COLS] = {GPIO_NUM_13};
+static const gpio_num_t row_gpios[LED_ROWS] = {GPIO_NUM_7, GPIO_NUM_8, GPIO_NUM_9};
+static const gpio_num_t col_gpios[LED_COLS] = {GPIO_NUM_6};
 
 
 /* --------- Local Functions --------- */
@@ -112,6 +112,7 @@ void leds__set_brightness(uint8_t level) {
     ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, level);
     ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 }
+
 
 // void leds__task(void *pvParameters) {
 

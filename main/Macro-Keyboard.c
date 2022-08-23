@@ -3,6 +3,9 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "tinyusb.h"
+#include "tusb_cdc_acm.h"
+#include "tusb_console.h"
 #include "esp_event.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
@@ -113,6 +116,17 @@ void deep_sleep_task(void *pvParameters) {
 
 
 static void logging_init() {
+
+    if (!USB_ENABLED) {
+        tinyusb_config_t tusb_cfg = { 0 }; // the configuration uses default values
+        ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+
+        tinyusb_config_cdcacm_t amc_cfg = { 0 }; // the configuration uses default values
+        ESP_ERROR_CHECK(tusb_cdc_acm_init(&amc_cfg));
+        
+        esp_tusb_init_console(TINYUSB_CDC_ACM_0); // log to usb
+    }
+
     // ESP-IDF modules
     esp_log_level_set("*", ESP_LOG_INFO);
 
