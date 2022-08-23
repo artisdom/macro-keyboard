@@ -166,6 +166,7 @@ void matrix__rtc_setup(void) {
 
 }
 
+
 void matrix__rtc_deinit() {
 
     // deinit rows

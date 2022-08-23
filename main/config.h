@@ -28,4 +28,11 @@
 #define DEEP_SLEEP_ENABLED  (1)
 #define DEEP_SLEEP_TIMEOUT  (120) //in seconds 
 
+
+/* --------- Led matrix configs --------- */
+#define LED_ENABLED         (1)
+#define LED_ROWS 			(3)
+#define LED_COLS            (1)
+
+
 #endif

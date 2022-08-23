@@ -8,7 +8,6 @@ A Macro keyboard built on ESP32.
 - Layout modifier: change the layout with a button or combination of buttons.
 - Shift modifier: hold the shift key to access a new layout.
 - Macros: fakes multiple key presses on a single key.
-
 - Deep sleep
 - Support for multiple BLE hosts and specific key layout to switch between them.
 
@@ -16,12 +15,11 @@ A Macro keyboard built on ESP32.
 ## Inspirations
 
 - [QMK](https://github.com/qmk/qmk_firmware/) for AVR devices.
-- [MK32](https://github.com/Galzai/MK32) somewhat of a port of QMK.
+- [MK32](https://github.com/Galzai/MK32) somewhat of a port of QMK for ESP32.
 
 
 ## Todo
 
-- Support for multiple saved BLE hosts.
 - Cleanup keyboard layouts in separate files.
 - Put BLE stuff in it's own component/folder.
 - KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
@@ -36,5 +34,5 @@ A Macro keyboard built on ESP32.
 
 ## Issues
 
-- Potential issue when switching BLE peer: the hid report array is not propably reset.
-Should not be an issue as BLE changes are supposed to happen without other keys being pressed.
+- Potential issue when switching BLE host: the hid report array is not propably reset.  
+Should not be an issue as BLE host changes are supposed to happen without other keys being pressed.
