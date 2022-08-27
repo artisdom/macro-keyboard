@@ -35,9 +35,11 @@ Should not be an issue as BLE host changes are supposed to happen without other 
 
 ## Docs / Referencs
 
-- ESP-IDF [guide](https://docs.espressif.com/projects/esp-idf/en/v4.4.2/esp32s3/index.html).
-- [Blog](http://blog.komar.be/how-to-make-a-keyboard-the-matrix/) on matrix keyboard design. 
+- ESP-IDF [Guide](https://docs.espressif.com/projects/esp-idf/en/v4.4.2/esp32s3/index.html).
+- ESP32-S3 [Datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf).
+- ESP32-S3 [Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf).
 - [TinyS3](https://esp32s3.com/index.html#home) board.
+- [Blog](http://blog.komar.be/how-to-make-a-keyboard-the-matrix/) on matrix keyboard design. 
 
 ### Inspirations
 
