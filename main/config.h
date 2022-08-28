@@ -34,7 +34,7 @@
 /* --------- Led matrix configs --------- */
 #define LED_ENABLED         (0)
 #define LED_ROWS 			(3)
-#define LED_COLS            (1)
+#define LED_COLS            (3)
 
 
 #endif

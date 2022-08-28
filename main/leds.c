@@ -16,6 +16,7 @@
 #define LEDC_CHANNEL            LEDC_CHANNEL_0
 #define LEDC_DUTY_RES           LEDC_TIMER_8_BIT // Set duty resolution to 8 bits
 #define LEDC_FREQUENCY          (5000) // Frequency in Hertz. Set frequency at 5 kHz
+#define LEDC_DUTY_CYCLE         (50) // in percentage
 
 #define LEDS_RATE               (1) // in ms
 
@@ -23,8 +24,8 @@
 /* --------- Local Variables --------- */
 static const char *TAG = "leds";
 
-static const gpio_num_t row_gpios[LED_ROWS] = {GPIO_NUM_7, GPIO_NUM_8, GPIO_NUM_9};
-static const gpio_num_t col_gpios[LED_COLS] = {GPIO_NUM_6};
+static const gpio_num_t row_gpios[LED_ROWS] = {GPIO_NUM_34, GPIO_NUM_43, GPIO_NUM_44};
+static const gpio_num_t col_gpios[LED_COLS] = {GPIO_NUM_36, GPIO_NUM_37, GPIO_NUM_35};
 
 
 /* --------- Local Functions --------- */
@@ -76,7 +77,7 @@ static void leds__ledc_init(uint8_t pin) {
         .timer_sel      = LEDC_TIMER,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = pin,
-        .duty           = 0, // Set duty to 0%
+        .duty           = LEDC_DUTY_CYCLE,
         .hpoint         = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
@@ -91,7 +92,7 @@ void leds__init() {
     ESP_LOGI(TAG, "Init row gpios");
     for (uint8_t i = 0; i < LED_ROWS; i++) {
         leds__gpio_init(row_gpios[i]);
-        gpio_set_level(row_gpios[i], 1);
+        gpio_set_level(row_gpios[i], 0);
     }
 
     // init columns
