@@ -14,8 +14,8 @@ A Macro keyboard built on ESP32.
 
 ## Todo
 
-- Cleanup keyboard layouts in separate files.
 - Put BLE stuff in it's own component/folder.
+- Create an HID level to create packets to be route to BLE or USB later on.
 - KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 - Better NVS stuff (layouts, configs, ...etc).
 - Battery management and reports.

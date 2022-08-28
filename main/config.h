@@ -15,6 +15,7 @@
 #define NUM_LAYOUTS         (2)
 #define DEFAULT_LAYOUT      (0)
 #define NUM_MACROS          (2)
+#define MACRO_LEN			(3)
 
 
 /* --------- BLE configs --------- */

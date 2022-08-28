@@ -3,6 +3,7 @@
 set( srcs   "Macro-Keyboard.c"
             "matrix.c"
             "keyboard.c"
+            "keymap.c"
             "memory.c"
             "leds.c"
             "ble_hidd.c"
