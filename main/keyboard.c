@@ -29,7 +29,7 @@ layout_t empty_layout = {
 };
 
 layout_t layout_1 = {
-    {KC_BLUETOOTH, KC_C, KC_MACRO_PASTE}
+    {KC_BLUETOOTH, KC_CC_PLAY_PAUSE, KC_CC_VOL_UP}
 };
 layout_t shift_layout_1 = {
     {KC_SHIFT, KC_G, KC_H}
@@ -72,18 +72,11 @@ static uint8_t hid_report_key_index[MATRIX_ROWS][MATRIX_COLS] = {0};
 /* --------- Local Functions --------- */
 static void keyboard__change_layout(uint16_t keycode);
 static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col);
+static uint16_t keyboard__check_modifier(uint16_t keycode);
 static bool keyboard__handle_modifier(uint16_t keycode, uint8_t keystate);
+static void keyboard__handle_media(uint16_t keycode, uint8_t keystate);
 
 
-// Unused
-// static void keyboard__set_layout(uint8_t layout_id) {
-//     if (layout_id < NUM_LAYOUTS) {
-//         current_layout = layout_id;
-//     }
-//     else {
-//         ESP_LOGE(TAG, "Layout number outside possible range %d > %d", layout_id, NUM_LAYOUTS);
-//     }
-// }
 
 static void keyboard__change_layout(uint16_t keycode) {
 
@@ -144,7 +137,7 @@ static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col) {
 
 
 // check for HID modifiers
-uint16_t keyboard__check_modifier(uint16_t keycode) {
+static uint16_t keyboard__check_modifier(uint16_t keycode) {
 
     uint8_t cur_mod = 0;
     // these are the modifier keys
@@ -203,6 +196,17 @@ static bool keyboard__handle_modifier(uint16_t keycode, uint8_t keystate) {
 
 }
 
+
+static void keyboard__handle_media(uint16_t keycode, uint8_t keystate) {
+
+    uint8_t media_state[HID_CC_REPORT_LEN] = { 0 };
+    media_state[0] = keycode - KC_CC_OFFSET;
+    media_state[1] = keystate;
+
+    xQueueSend(ble_media_q, (void*) &media_state, (TickType_t) 0);
+
+
+}
 
 void keyboard__init() {
     // current_layout = 1;
@@ -285,6 +289,12 @@ uint8_t *keyboard__check_state() {
                     continue;
                 }
 
+                // media controls
+                if (keycode >= KC_BASE_MEDIA && keycode <= KC_MAX_MEDIA) {
+                    keyboard__handle_media(keycode, keystate);
+                    continue;
+                }
+
                 // normal key report
                 if (report_index < HID_REPORT_LEN) {
 
@@ -324,6 +334,12 @@ uint8_t *keyboard__check_state() {
                         }
                     }
                     hid_report_key_index[row][col] = 0;
+                    continue;
+                }
+
+                // media controls
+                if (keycode >= KC_BASE_MEDIA && keycode <= KC_MAX_MEDIA) {
+                    keyboard__handle_media(keycode, keystate);
                     continue;
                 }
 

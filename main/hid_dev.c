@@ -98,6 +98,7 @@ void hid_consumer_build_report(uint8_t *buffer, consumer_cmd_t cmd)
             break;
 
         case HID_CONSUMER_PLAY:
+        case HID_CONSUMER_PLAY_PAUSE:
             HID_CC_RPT_SET_BUTTON(buffer, HID_CC_RPT_PLAY);
             break;
 

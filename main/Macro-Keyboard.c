@@ -133,7 +133,7 @@ static void logging_init() {
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
-    esp_log_level_set("keyboard", ESP_LOG_INFO);
+    esp_log_level_set("keyboard", ESP_LOG_DEBUG);
     esp_log_level_set("memory", ESP_LOG_DEBUG);
     esp_log_level_set("leds", ESP_LOG_DEBUG);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);

@@ -15,8 +15,6 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_bt.h"
-
-#include "esp_hidd_prf_api.h"
 #include "esp_bt_defs.h"
 #include "esp_gap_ble_api.h"
 #include "esp_gatts_api.h"
@@ -24,8 +22,10 @@
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include "driver/gpio.h"
-#include "hid_dev.h"
 #include "nvs_flash.h"
+
+#include "esp_hidd_prf_api.h"
+#include "hid_dev.h"
 
 #include "ble_hidd.h"
 #include "config.h"
@@ -35,16 +35,19 @@
 
 /* --------- Global Variables --------- */
 TaskHandle_t xBLE_keyboard_task;
+TaskHandle_t xBLE_media_task;
 TaskHandle_t xBLE_event_task;
 
 // Input queue for sending keyboard reports
 QueueHandle_t ble_keyboard_q;
+// Input queue for sending media/Consumer control reports
+QueueHandle_t ble_media_q;
 // Input queue for receiving ble events to handle
 QueueHandle_t ble_event_q;
 
 
 /* --------- Local Defines --------- */
-#define CHAR_DECLARATION_SIZE   (sizeof(uint8_t))       
+#define CHAR_DECLARATION_SIZE   (sizeof(uint8_t))  
 
 
 /* --------- Local Variables --------- */
@@ -298,6 +301,7 @@ void ble_init(void) {
 
     // Create queues
     ble_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
+    ble_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
     ble_event_q = xQueueCreate(32, sizeof(uint8_t));
 
     // Initialize NVS.
@@ -367,6 +371,7 @@ void ble_init(void) {
     // Create tasks
     // xTaskCreate(&hid_demo_task, "hid_task", 2048, NULL, 5, NULL);
     xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
+    xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_media_task, 0);
     xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 8096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
 }
 
@@ -418,7 +423,7 @@ esp_err_t ble_deinit() {
 
 void ble_keyboard_task(void *pvParameters) {
 
-    uint8_t *report;
+    uint8_t report[HID_REPORT_LEN];
 
     ESP_LOGI(TAG, "Starting ble keyboard task");
 
@@ -443,6 +448,39 @@ void ble_keyboard_task(void *pvParameters) {
     }
     else {
         ESP_LOGE(TAG, "keyboard queue not initialized, retry in 1s");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
+}
+
+
+void ble_media_task(void *pvParameters) {
+
+    uint8_t report[HID_CC_REPORT_LEN];
+
+    ESP_LOGI(TAG, "Starting ble media task");
+
+    if (ble_media_q != NULL) {
+        ESP_LOGW(TAG, "media queue not initialised, resetting...");
+        xQueueReset(ble_media_q);
+    }
+
+    //check if queue is initialized
+    if (ble_media_q != NULL) {
+        while (1) {
+            //pend on MQ, if timeout triggers, just wait again.
+            if (xQueueReceive(ble_media_q, &report, portMAX_DELAY)) {
+                //if we are not connected, discard.
+                if (sec_conn == false)
+                    continue;
+                ESP_LOGD(TAG, "media report: 0x%x 0x%x", report[0], report[1]);
+                esp_hidd_send_consumer_value(hid_conn_id, report[0], report[1]);
+            }
+
+        }
+    }
+    else {
+        ESP_LOGE(TAG, "media queue not initialized, retry in 1s");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 

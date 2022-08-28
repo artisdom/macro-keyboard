@@ -21,6 +21,7 @@
 #define BLE_DEVICE_NAME     "Macro Keyboard"
 #define BLE_ENABLED         (1)
 #define HID_REPORT_LEN      (8)
+#define HID_CC_REPORT_LEN   (2)
 #define BLE_NUM_HOSTS       (3)
 
 
