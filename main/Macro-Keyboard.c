@@ -133,9 +133,9 @@ static void logging_init() {
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
-    esp_log_level_set("keyboard", ESP_LOG_DEBUG);
+    esp_log_level_set("keyboard", ESP_LOG_INFO);
     esp_log_level_set("memory", ESP_LOG_DEBUG);
-    esp_log_level_set("leds", ESP_LOG_DEBUG);
+    esp_log_level_set("leds", ESP_LOG_INFO);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
 
 }
@@ -157,6 +157,7 @@ void app_main(void) {
     }
     else {
         ESP_LOGI(TAG, "Wakeup from normal boot");
+        ESP_LOGD(TAG, "wakeup cause: %d", esp_sleep_get_wakeup_cause());
         memory__set_restart_counter();
     }
 

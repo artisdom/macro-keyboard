@@ -14,8 +14,8 @@
 /* --------- Local Variables --------- */
 static const char *TAG = "matrix";
 
-static const gpio_num_t row_gpios[MATRIX_ROWS] = {GPIO_NUM_1};
-static const gpio_num_t col_gpios[MATRIX_COLS] = {GPIO_NUM_0, GPIO_NUM_21, GPIO_NUM_5};
+static const gpio_num_t row_gpios[MATRIX_ROWS] = {GPIO_NUM_9};
+static const gpio_num_t col_gpios[MATRIX_COLS] = {GPIO_NUM_5, GPIO_NUM_4, GPIO_NUM_3};
 
 uint8_t matrix_state[MATRIX_ROWS][MATRIX_COLS] = {0};
 static uint8_t prev_matrix_state[MATRIX_ROWS][MATRIX_COLS] = {0};
@@ -40,15 +40,14 @@ static void matrix__gpio_row_init(uint8_t pin) {
 
     gpio_config_t io_conf = {
         .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_INPUT_OUTPUT,
+        .mode = GPIO_MODE_INPUT_OUTPUT_OD,
         .pin_bit_mask = pin_mask,
         .pull_down_en = 0,
-        .pull_up_en = 1
+        .pull_up_en = 0
     };
   
     ESP_ERROR_CHECK(gpio_config(&io_conf));
-    gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_0);
-    gpio_set_level(pin, 1);
+    gpio_set_level(pin, 0);
 
 }
 
@@ -59,14 +58,15 @@ static void matrix__gpio_col_init(uint8_t pin) {
 
     gpio_config_t io_conf = {
         .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_INPUT_OUTPUT_OD,
+        .mode = GPIO_MODE_INPUT_OUTPUT,
         .pin_bit_mask = pin_mask,
         .pull_down_en = 0,
-        .pull_up_en = 0
+        .pull_up_en = 1
     };
   
     ESP_ERROR_CHECK(gpio_config(&io_conf));
-    gpio_set_level(pin, 0);
+    gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_0);
+    gpio_set_level(pin, 1);
 
 }
 
@@ -92,13 +92,13 @@ void matrix__init() {
 
 void matrix__scan() {
 
-    // Setting column pin as low, and checking if the input of a row pin changes.
-    for (uint8_t col = 0; col < MATRIX_COLS; col++) {
-        gpio_set_level(col_gpios[col], 0);
+    // Setting row pin as low, and checking if the column pin changes.
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        gpio_set_level(row_gpios[row], 0);
 
-        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
 
-            uint8_t state = !(gpio_get_level(row_gpios[row]));
+            uint8_t state = !(gpio_get_level(col_gpios[col]));
 
             if (prev_matrix_state[row][col] != state) {
                 debounce_matrix[row][col] = millis();
@@ -112,7 +112,7 @@ void matrix__scan() {
             }
         }
 
-        gpio_set_level(col_gpios[col], 1);
+        gpio_set_level(row_gpios[row], 1);
     }
 
     ESP_LOGD(TAG, "%d states: %d, %d, %d", millis(), matrix_state[0][0], matrix_state[0][1], matrix_state[0][2]);
@@ -133,12 +133,13 @@ void matrix__rtc_setup(void) {
         if (rtc_gpio_is_valid_gpio(pin) == 1) {
             rtc_gpio_init(pin);
             rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_OUTPUT);
+            rtc_gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_0);
             rtc_gpio_set_level(pin, 1);
 
             ESP_LOGD(TAG,"%d is level %d", pin, gpio_get_level(pin));
         }
         else {
-            ESP_LOGW(TAG, "gpio column pin %d is not a valid RTC pin", pin);
+            ESP_LOGW(TAG, "gpio col pin %d is not a valid RTC pin", pin);
         }
     }
 
@@ -148,7 +149,6 @@ void matrix__rtc_setup(void) {
         if (rtc_gpio_is_valid_gpio(pin) == 1) {
             rtc_gpio_init(pin);
             rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_OUTPUT);
-            rtc_gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_0);
             rtc_gpio_set_level(pin, 0);
             rtc_gpio_wakeup_enable(pin, GPIO_INTR_HIGH_LEVEL);
 
