@@ -3,6 +3,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "tinyusb.h"
 #include "tusb_cdc_acm.h"
 #include "tusb_console.h"
@@ -15,6 +16,8 @@
 #include "keyboard.h"
 #include "memory.h"
 #include "leds.h"
+#include "events.h"
+#include "toggle_switch.h"
 #include "ble_hidd.h"
 
 
@@ -29,6 +32,8 @@
 static const char *TAG = "main";
 
 static bool DEEP_SLEEP = true;
+
+QueueHandle_t event_q;
 
 
 
@@ -115,6 +120,57 @@ void deep_sleep_task(void *pvParameters) {
 }
 
 
+void event_handler_task(void *parameters) {
+
+    bt_event_t bt_event;
+
+    ESP_LOGI(TAG, "Init event handler task");
+
+    if (event_q != NULL) {
+        ESP_LOGW(TAG, "keyboard queue not initialised, resetting...");
+        xQueueReset(event_q);
+    }
+
+    while(1) {
+        event_t event;
+        memset(&event, 0x00, sizeof(event_t));
+
+        if(xQueueReceive(event_q, &event, portMAX_DELAY)) {
+            
+            switch(event.type) {
+                case EVENT_BT_CHANGE_DEVICE: {
+                    bt_event.type = BT_EVENT_CHANGE_HOST;
+                    bt_event.host_id = event.data;
+
+                    ESP_LOGI(TAG, "Changing BLE device to %d", event.data);
+                    xQueueSend(ble_event_q, &bt_event, (TickType_t) 0);
+                    break;
+                }
+                case EVENT_TOGGLE_SWITCH: {
+                    if (event.data == TOGGLE_BLE) {
+                        ESP_LOGI(TAG, "Toggle BLE");
+                        ble_init();
+                    }
+                    else if (event.data == TOGGLE_USB) {
+                        ESP_LOGI(TAG, "Toggle USB");
+                        ble_deinit();
+                        //WIP
+                    }
+                    break;
+                }
+                default:
+                    ESP_LOGW(TAG, "Unhandled event type");
+                    break;
+            }
+
+        }
+
+
+    }
+    vTaskDelete(NULL);
+}
+
+
 static void logging_init() {
 
     if (!USB_ENABLED) {
@@ -134,13 +190,16 @@ static void logging_init() {
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
     esp_log_level_set("keyboard", ESP_LOG_INFO);
-    esp_log_level_set("memory", ESP_LOG_DEBUG);
+    esp_log_level_set("memory", ESP_LOG_INFO);
     esp_log_level_set("leds", ESP_LOG_INFO);
+    esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
 
 }
 
 void app_main(void) {
+
+    uint8_t toggle_switch_state = 1;
 
     matrix__rtc_deinit(); // first to disable interrupts
 
@@ -164,7 +223,12 @@ void app_main(void) {
     
     matrix__init();
     keyboard__init();
-    if (BLE_ENABLED) {
+
+    if (TOGGLE_SWITCH_ENABLED) {
+        toggle_switch__init();
+        toggle_switch_state = toggle_switch__get_state();
+    }
+    if (BLE_ENABLED && (toggle_switch_state == TOGGLE_BLE)) {
         ble_init();
     }
 
@@ -176,5 +240,8 @@ void app_main(void) {
     if (DEEP_SLEEP_ENABLED) {
         xTaskCreatePinnedToCore(deep_sleep_task, "deep sleep task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
     }
+
+    event_q = xQueueCreate(32, sizeof(event_t));
+    xTaskCreatePinnedToCore(event_handler_task, "event handler task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
 
 }

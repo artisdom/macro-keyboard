@@ -411,6 +411,8 @@ esp_err_t ble_deinit() {
         return ret;
     }
 
+    ESP_LOGI(TAG, "Successful BLE deinit");
+
     return ESP_OK;
 }
 
@@ -490,7 +492,7 @@ void ble_media_task(void *pvParameters) {
 void ble_event_task(void *pvParameters) {
 
     // only BT host id change for now
-    uint8_t event;
+    bt_event_t event;
 
     ESP_LOGI(TAG, "Starting ble event task");
 
@@ -503,7 +505,18 @@ void ble_event_task(void *pvParameters) {
         while (1) {
             //pend on MQ, if timeout triggers, just wait again.
             if (xQueueReceive(ble_event_q, &event, portMAX_DELAY)) {
-                ble_change_host(event);
+
+                switch (event.type) {
+                    case BT_EVENT_CHANGE_HOST: {
+                        ESP_LOGD(TAG, "Event: Change host");
+                        ble_change_host(event.host_id);
+                        break;
+                    }
+                    default: {
+                        ESP_LOGW(TAG, "Unhandled event type");
+                        break;
+                    }
+                }
             }
 
         }

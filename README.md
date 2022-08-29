@@ -21,7 +21,7 @@ A Macro keyboard built on ESP32.
 - Battery management and reports.
 - LEDs?
 - USB HID (with ESP32-S3).
-- Toggle switch between BLE and USB.
+- Toggle switch between BLE and USB (partially done).
 - MIDI device?
 - Mutiple BLE hosts in parallel? + BLE 5 features?
 - If design is kept as BLE only, shift implementation to NimBLE stack (not Bluedroid).

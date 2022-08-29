@@ -23,6 +23,17 @@ typedef struct bt_host_s {
 } bt_host_t;
 
 
+// Definitions for events
+enum bt_event_type_e {
+	BT_EVENT_CHANGE_HOST = 0x01,
+	BT_EVENT_RESET_HOST,
+};
+typedef struct bt_event_s {
+	uint8_t type;
+	uint8_t host_id;	
+} bt_event_t;
+
+
 void ble_init(void);
 esp_err_t ble_deinit(void);
 

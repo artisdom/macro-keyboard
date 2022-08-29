@@ -12,6 +12,7 @@
 #include "config.h"
 #include "matrix.h"
 #include "ble_hidd.h"
+#include "events.h"
 
 
 /* --------- Local Variables --------- */
@@ -216,9 +217,11 @@ uint8_t *keyboard__check_state() {
                 // bluetooth
                 if (bluetooth_modifier == true && keycode >= KC_MIN_BLUETOOTH && keycode <= KC_MAX_BLUETOOTH) {
                     uint8_t bt_host = keycode - KC_MIN_BLUETOOTH;
-                    if (BLE_ENABLED) {
-                        xQueueSend(ble_event_q, (void *) &bt_host, (TickType_t) 0);
-                    }
+                    event_t event = {
+                        .type = EVENT_BT_CHANGE_DEVICE,
+                        .data = bt_host,
+                    };
+                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
                     continue;
                 }
 
