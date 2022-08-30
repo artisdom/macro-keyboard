@@ -65,14 +65,18 @@ void toggle_switch__init() {
 
 uint8_t toggle_switch__get_state() {
 
-    if ( !(gpio_get_level(toggle_ble_gpio)) ) {
+    // uint8_t ble_gpio = gpio_get_level(toggle_ble_gpio);
+    uint8_t ble_gpio = 0; //hack for now
+    uint8_t usb_gpio = gpio_get_level(toggle_usb_gpio);
+
+    if ( !ble_gpio ) {
         return TOGGLE_BLE;
     }
-    else if ( !(gpio_get_level(toggle_usb_gpio)) ) {
+    else if ( !usb_gpio ) {
         return TOGGLE_USB;
     }
     else {
-        ESP_LOGW(TAG, "Impossible toggle states");
+        ESP_LOGW(TAG, "Impossible toggle states %d %d", ble_gpio, usb_gpio);
     }
     return TOGGLE_OFF;
 }
@@ -83,6 +87,7 @@ static void IRAM_ATTR toggle_switch__gpio_isr_handler(void *arg) {
         .type = EVENT_TOGGLE_SWITCH,
         .data = TOGGLE_OFF,
     };
-    event.data = *((uint8_t *)arg);
+    // event.data = *((uint8_t *)arg);
+    event.data = (uint8_t) arg;
     xQueueSendFromISR(event_q, &event, (TickType_t) 0);
 }

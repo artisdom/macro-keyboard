@@ -55,6 +55,7 @@ static const char *TAG = "ble_hid";
 
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
+static bool run_tasks = true;
 
 static uint8_t current_host_id = 0;
 static bt_host_t current_host;
@@ -299,10 +300,12 @@ void ble_init(void) {
 
     ESP_LOGI(TAG, "Init BLE");
 
+    run_tasks = true;
+
     // Create queues
     ble_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
     ble_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
-    ble_event_q = xQueueCreate(32, sizeof(uint8_t));
+    ble_event_q = xQueueCreate(32, sizeof(bt_event_t));
 
     // Initialize NVS.
     ret = nvs_flash_init();
@@ -369,7 +372,6 @@ void ble_init(void) {
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
 
     // Create tasks
-    // xTaskCreate(&hid_demo_task, "hid_task", 2048, NULL, 5, NULL);
     xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
     xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_media_task, 0);
     xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 8096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
@@ -380,6 +382,8 @@ esp_err_t ble_deinit() {
     esp_err_t ret;
 
     ESP_LOGI(TAG, "Deinit BLE");
+
+    run_tasks = false; // used to stop all BLE tasks
 
     ret = esp_hidd_profile_deinit();
     if (ret) {
@@ -411,6 +415,11 @@ esp_err_t ble_deinit() {
         return ret;
     }
 
+    ESP_LOGI(TAG, "Deleting BLE queues");
+    vQueueDelete(ble_keyboard_q);
+    vQueueDelete(ble_media_q);
+    vQueueDelete(ble_event_q);
+
     ESP_LOGI(TAG, "Successful BLE deinit");
 
     return ESP_OK;
@@ -429,29 +438,31 @@ void ble_keyboard_task(void *pvParameters) {
 
     ESP_LOGI(TAG, "Starting ble keyboard task");
 
-    if (ble_keyboard_q != NULL) {
+    if (ble_keyboard_q == NULL) {
         ESP_LOGW(TAG, "keyboard queue not initialised, resetting...");
         xQueueReset(ble_keyboard_q);
     }
 
-    //check if queue is initialized
-    if (ble_keyboard_q != NULL) {
-        while (1) {
+    while (run_tasks) {
+        //check if queue is initialized
+        if (ble_keyboard_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
-            if (xQueueReceive(ble_keyboard_q, &report, portMAX_DELAY)) {
+            if (xQueueReceive(ble_keyboard_q, &report, (TickType_t) 100)) {
                 //if we are not connected, discard.
                 if (sec_conn == false)
                     continue;
                 // esp_hidd_send_keyboard_value(hid_conn_id, 0, &report, HID_REPORT_LEN);
                 hid_dev_send_report(hidd_le_env.gatt_if, hid_conn_id, HID_RPT_ID_KEY_IN, HID_REPORT_TYPE_INPUT, HID_REPORT_LEN, report);
             }
-
+        }
+        else {
+            ESP_LOGE(TAG, "keyboard queue not initialized, retry in 1s");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
-    else {
-        ESP_LOGE(TAG, "keyboard queue not initialized, retry in 1s");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+
+    ESP_LOGW(TAG, "Stopping ble keyboard task");
+    vTaskDelete(NULL);
 
 }
 
@@ -462,29 +473,31 @@ void ble_media_task(void *pvParameters) {
 
     ESP_LOGI(TAG, "Starting ble media task");
 
-    if (ble_media_q != NULL) {
+    if (ble_media_q == NULL) {
         ESP_LOGW(TAG, "media queue not initialised, resetting...");
         xQueueReset(ble_media_q);
     }
 
-    //check if queue is initialized
-    if (ble_media_q != NULL) {
-        while (1) {
+    while (run_tasks) {
+        //check if queue is initialized
+        if (ble_media_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
-            if (xQueueReceive(ble_media_q, &report, portMAX_DELAY)) {
+            if (xQueueReceive(ble_media_q, &report, (TickType_t) 100)) {
                 //if we are not connected, discard.
                 if (sec_conn == false)
                     continue;
                 ESP_LOGD(TAG, "media report: 0x%x 0x%x", report[0], report[1]);
                 esp_hidd_send_consumer_value(hid_conn_id, report[0], report[1]);
             }
-
+        }
+        else {
+            ESP_LOGE(TAG, "media queue not initialized, retry in 1s");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
-    else {
-        ESP_LOGE(TAG, "media queue not initialized, retry in 1s");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+
+    ESP_LOGW(TAG, "Stopping ble media task");
+    vTaskDelete(NULL);
 
 }
 
@@ -496,70 +509,38 @@ void ble_event_task(void *pvParameters) {
 
     ESP_LOGI(TAG, "Starting ble event task");
 
-    if (ble_event_q != NULL)
+    if (ble_event_q == NULL) {
         ESP_LOGW(TAG, "ble_event queue not initialised, resetting...");
         xQueueReset(ble_event_q);
+    }
 
-    //check if queue is initialized
-    if (ble_event_q != NULL) {
-        while (1) {
-            //pend on MQ, if timeout triggers, just wait again.
-            if (xQueueReceive(ble_event_q, &event, portMAX_DELAY)) {
+    while (run_tasks) {
+        //check if queue is initialized
+        if (ble_event_q != NULL) {
+                //pend on MQ, if timeout triggers, just wait again.
+                if (xQueueReceive(ble_event_q, &event, (TickType_t) 100 )) {
 
-                switch (event.type) {
-                    case BT_EVENT_CHANGE_HOST: {
-                        ESP_LOGD(TAG, "Event: Change host");
-                        ble_change_host(event.host_id);
-                        break;
-                    }
-                    default: {
-                        ESP_LOGW(TAG, "Unhandled event type");
-                        break;
+                    switch (event.type) {
+                        case BT_EVENT_CHANGE_HOST: {
+                            ESP_LOGD(TAG, "Event: Change host");
+                            ble_change_host(event.host_id);
+                            break;
+                        }
+                        default: {
+                            ESP_LOGW(TAG, "Unhandled event type");
+                            break;
+                        }
                     }
                 }
-            }
-
+        }
+        else {
+            ESP_LOGE(TAG, "ble_event queue not initialized, retry in 1s");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
-    else {
-        ESP_LOGE(TAG, "ble_event queue not initialized, retry in 1s");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+
+    ESP_LOGW(TAG, "Stopping ble event task");
+    vTaskDelete(NULL);
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-// void hid_demo_task(void *pvParameters) {
-//     vTaskDelay(1000 / portTICK_PERIOD_MS);
-//     while(1) {
-//         vTaskDelay(2000 / portTICK_PERIOD_MS);
-//         if (sec_conn) {
-//             ESP_LOGI(TAG, "Send the volume");
-//             send_volum_up = true;
-//             uint8_t key_vaule = {HID_KEY_A};
-//             esp_hidd_send_keyboard_value(hid_conn_id, 0, &key_vaule, 1);
-//             vTaskDelay(100 / portTICK_PERIOD_MS);
-//             key_vaule = 0;
-//             esp_hidd_send_keyboard_value(hid_conn_id, 0, &key_vaule, 1);
-//             // esp_hidd_send_consumer_value(hid_conn_id, HID_CONSUMER_VOLUME_UP, true);
-//             vTaskDelay(3000 / portTICK_PERIOD_MS);
-//             // if (send_volum_up) {
-//             //     send_volum_up = false;
-//             //     esp_hidd_send_consumer_value(hid_conn_id, HID_CONSUMER_VOLUME_UP, false);
-//             //     esp_hidd_send_consumer_value(hid_conn_id, HID_CONSUMER_VOLUME_DOWN, true);
-//             //     vTaskDelay(3000 / portTICK_PERIOD_MS);
-//             //     esp_hidd_send_consumer_value(hid_conn_id, HID_CONSUMER_VOLUME_DOWN, false);
-//             // }
-//         }
-//     }
-// }

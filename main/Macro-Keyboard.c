@@ -11,6 +11,8 @@
 #include "esp_sleep.h"
 #include "esp_timer.h"
 #include "esp_log.h"
+#include "driver/uart.h"
+#include "driver/gpio.h"
 
 #include "matrix.h"
 #include "keyboard.h"
@@ -33,7 +35,9 @@ static const char *TAG = "main";
 
 static bool DEEP_SLEEP = true;
 
+static uint8_t mode = TOGGLE_BLE;
 QueueHandle_t event_q;
+
 
 
 
@@ -52,10 +56,10 @@ void keyboard_task(void *parameters) {
             void *report;
             DEEP_SLEEP = false;
 
-            if (ble_keyboard_q == NULL) {
-                ESP_LOGE(TAG, "keyboard queue not initialized");
-                continue;
-            }
+            // if (ble_keyboard_q == NULL) {
+            //     ESP_LOGE(TAG, "keyboard queue not initialized");
+            //     continue;
+            // }
 
             report = (void *) &current_report;
             memcpy(past_report, current_report, sizeof(past_report));
@@ -64,7 +68,7 @@ void keyboard_task(void *parameters) {
                 current_report[0], current_report[1], current_report[2], current_report[3],
                 current_report[4], current_report[5], current_report[6], current_report[7]);
 
-            if (BLE_ENABLED) {
+            if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
                 xQueueSend(ble_keyboard_q, report, (TickType_t) 0);
             }
 
@@ -97,7 +101,7 @@ void deep_sleep_task(void *pvParameters) {
                 ESP_LOGW(TAG, "Deep sleep triggered");
 
                 // wake up esp32 using rtc gpio
-                if (BLE_ENABLED && ble_deinit() != ESP_OK) {
+                if (BLE_ENABLED && (mode == TOGGLE_BLE) && (ble_deinit() != ESP_OK)) {
                     ESP_LOGE(TAG, "Unable to go to sleep!");
                     DEEP_SLEEP = false;
                     continue;                    
@@ -124,10 +128,10 @@ void event_handler_task(void *parameters) {
 
     bt_event_t bt_event;
 
-    ESP_LOGI(TAG, "Init event handler task");
+    ESP_LOGI(TAG, "Starting event handler task");
 
-    if (event_q != NULL) {
-        ESP_LOGW(TAG, "keyboard queue not initialised, resetting...");
+    if (event_q == NULL) {
+        ESP_LOGW(TAG, "event queue not initialised, resetting...");
         xQueueReset(event_q);
     }
 
@@ -142,19 +146,26 @@ void event_handler_task(void *parameters) {
                     bt_event.type = BT_EVENT_CHANGE_HOST;
                     bt_event.host_id = event.data;
 
-                    ESP_LOGI(TAG, "Changing BLE device to %d", event.data);
-                    xQueueSend(ble_event_q, &bt_event, (TickType_t) 0);
+                    if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
+                        ESP_LOGI(TAG, "Changing BLE device to %d", event.data);
+                        xQueueSend(ble_event_q, &bt_event, (TickType_t) 0);
+                    }
                     break;
                 }
                 case EVENT_TOGGLE_SWITCH: {
-                    if (event.data == TOGGLE_BLE) {
+                    if ((event.data == TOGGLE_BLE) && BLE_ENABLED) {
+                        mode = event.data;
                         ESP_LOGI(TAG, "Toggle BLE");
                         ble_init();
                     }
-                    else if (event.data == TOGGLE_USB) {
+                    else if ((event.data == TOGGLE_USB) && USB_ENABLED) {
+                        mode = event.data;
                         ESP_LOGI(TAG, "Toggle USB");
                         ble_deinit();
                         //WIP
+                    }
+                    else {
+                        ESP_LOGW(TAG, "Unknown toggle event type");
                     }
                     break;
                 }
@@ -173,14 +184,30 @@ void event_handler_task(void *parameters) {
 
 static void logging_init() {
 
-    if (!USB_ENABLED) {
-        tinyusb_config_t tusb_cfg = { 0 }; // the configuration uses default values
-        ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+    if (USB_ENABLED) {
+        // tinyusb_config_t tusb_cfg = { 0 }; // the configuration uses default values
+        // ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
 
-        tinyusb_config_cdcacm_t amc_cfg = { 0 }; // the configuration uses default values
-        ESP_ERROR_CHECK(tusb_cdc_acm_init(&amc_cfg));
+        // tinyusb_config_cdcacm_t amc_cfg = { 0 }; // the configuration uses default values
+        // ESP_ERROR_CHECK(tusb_cdc_acm_init(&amc_cfg));
         
-        esp_tusb_init_console(TINYUSB_CDC_ACM_0); // log to usb
+        // esp_tusb_init_console(TINYUSB_CDC_ACM_0); // log to usb
+
+
+        // change UART default pins
+        uart_config_t uart_config = {
+            .baud_rate = 115200,
+            .data_bits = UART_DATA_8_BITS,
+            .parity    = UART_PARITY_DISABLE,
+            .stop_bits = UART_STOP_BITS_1,
+            .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+            .source_clk = UART_SCLK_APB,
+        };
+
+        ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 2048, 2048, 0, NULL, 0));
+        ESP_ERROR_CHECK(uart_param_config(UART_NUM_0, &uart_config));
+        ESP_ERROR_CHECK(uart_set_pin(UART_NUM_0, 0, 21, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+
     }
 
     // ESP-IDF modules
@@ -198,8 +225,6 @@ static void logging_init() {
 }
 
 void app_main(void) {
-
-    uint8_t toggle_switch_state = 1;
 
     matrix__rtc_deinit(); // first to disable interrupts
 
@@ -220,15 +245,16 @@ void app_main(void) {
         memory__set_restart_counter();
     }
 
-    
+    event_q = xQueueCreate(32, sizeof(event_t));
+
     matrix__init();
     keyboard__init();
 
     if (TOGGLE_SWITCH_ENABLED) {
         toggle_switch__init();
-        toggle_switch_state = toggle_switch__get_state();
+        mode = toggle_switch__get_state();
     }
-    if (BLE_ENABLED && (toggle_switch_state == TOGGLE_BLE)) {
+    if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
         ble_init();
     }
 
@@ -241,7 +267,6 @@ void app_main(void) {
         xTaskCreatePinnedToCore(deep_sleep_task, "deep sleep task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
     }
 
-    event_q = xQueueCreate(32, sizeof(event_t));
     xTaskCreatePinnedToCore(event_handler_task, "event handler task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
 
 }
