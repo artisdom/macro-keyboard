@@ -90,13 +90,10 @@ void battery_task(void *pvParameters) {
     while(1) {
         uint32_t battery_level = battery__get_level();
 
-        if (battery_level > 100) {
-            battery_level = 100;
-
+        if (battery__is_charging()) {
             // if charging, disable DEEP_SLEEP
             DEEP_SLEEP = false;
         }
-
 
         if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
             xQueueSend(ble_battery_q, &battery_level, (TickType_t) 0);

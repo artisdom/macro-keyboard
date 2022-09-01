@@ -19,7 +19,7 @@ A Macro keyboard built on ESP32.
 - Create an HID level to create packets to be route to BLE or USB later on.
 - KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 - Better NVS stuff (layouts, configs, ...etc).
-- Better Battery reports (when init ble connection use read level + adc calibration) + detect USB to define if battery is charging and deep sleep should be paused.
+- Better Battery reports (when init ble connection use read level + adc calibration)
 - LEDs? To be finalised and better once final proto is done (use event handler).
 - Bluetooth connection reset keycode to delete NVS host + start advertising.
 - USB HID (with ESP32-S3).
