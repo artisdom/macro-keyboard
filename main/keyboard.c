@@ -26,6 +26,7 @@ static uint8_t current_layout = DEFAULT_LAYOUT;
 static bool layout_modifier = false;
 static bool shift_modifier = false;
 static bool bluetooth_modifier = false;
+static bool bluetooth_reset_modifier = false;
 
 
 // the HID report
@@ -151,6 +152,15 @@ static bool keyboard__handle_modifier(uint16_t keycode, uint8_t keystate) {
                 }
                 ESP_LOGD(TAG, "bluetooth modifier %d", bluetooth_modifier);
                 break;
+            case KC_BT_DEVICE_RESET:
+                if (keystate == KEY_UP) {
+                    bluetooth_reset_modifier = true;
+                }
+                else {
+                    bluetooth_reset_modifier = false;
+                }
+                ESP_LOGD(TAG, "bluetooth reset modifier %d", bluetooth_reset_modifier);
+                break;
             default:
                 // ESP_LOGW(TAG, "Unrecognised modifier 0x%x", keycode);
                 modifier_changed = false;
@@ -215,13 +225,22 @@ uint8_t *keyboard__check_state() {
                 }
 
                 // bluetooth
-                if (bluetooth_modifier == true && keycode >= KC_MIN_BLUETOOTH && keycode <= KC_MAX_BLUETOOTH) {
+                if (keycode >= KC_MIN_BLUETOOTH && keycode <= KC_MAX_BLUETOOTH) {
                     uint8_t bt_host = keycode - KC_MIN_BLUETOOTH;
-                    event_t event = {
-                        .type = EVENT_BT_CHANGE_DEVICE,
-                        .data = bt_host,
-                    };
-                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                    if (bluetooth_reset_modifier == true) {
+                        event_t event = {
+                            .type = EVENT_BT_RESET_DEVICE,
+                            .data = bt_host,
+                        };
+                        xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                    }
+                    else if (bluetooth_modifier == true) {
+                        event_t event = {
+                            .type = EVENT_BT_CHANGE_DEVICE,
+                            .data = bt_host,
+                        };
+                        xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                    }
                     continue;
                 }
 

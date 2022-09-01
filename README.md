@@ -21,7 +21,6 @@ A Macro keyboard built on ESP32.
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level + adc calibration)
 - LEDs? To be finalised and better once final proto is done (use event handler).
-- Bluetooth connection reset keycode to delete NVS host + start advertising.
 - USB HID (with ESP32-S3).
 - Toggle switch between BLE and USB (partially done).
 - MIDI device?

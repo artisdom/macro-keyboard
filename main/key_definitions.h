@@ -473,6 +473,7 @@ enum internal_special_keycodes {
     KC_SHIFT,
 
     KC_BLUETOOTH = 0x210,
+    KC_BT_DEVICE_RESET,
     KC_BT_DEVICE_0,
     KC_BT_DEVICE_1,
     KC_BT_DEVICE_2,
@@ -495,7 +496,7 @@ enum internal_special_keycodes {
 #define KC_MIN_LAYOUT      KC_LAYOUT_0
 #define KC_MAX_LAYOUT      KC_LAYOUT_8
 #define KC_MIN_BLUETOOTH   KC_BT_DEVICE_0
-#define KC_MAX_BLUETOOTH   KC_BT_DEVICE_1
+#define KC_MAX_BLUETOOTH   KC_BT_DEVICE_2
 #define KC_BASE_MACRO      KC_MACRO_0
 #define KC_MAX_MACRO       KC_MACRO_9
 

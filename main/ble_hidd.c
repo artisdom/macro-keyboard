@@ -250,17 +250,6 @@ static void ble_change_host(uint8_t host_id) {
 
     ESP_LOGD(TAG, "current host: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(current_host.addr));
 
-    // int bond_num = esp_ble_get_bond_device_num();
-    // ESP_LOGD(TAG, "device bond num %d", bond_num);
-    // esp_ble_bond_dev_t bond_dev[10];
-    // esp_ble_get_bond_device_list(&bond_num, bond_dev);
-
-    // ESP_LOGD(TAG, "Bond Device list:");
-    // for (uint8_t i = 0; i < bond_num; i++) {
-    //     ESP_LOGD(TAG, "%d : addr: "ESP_BD_ADDR_STR, i, ESP_BD_ADDR_HEX(bond_dev[i].bd_addr));
-    // }
-    
-
     ret = esp_ble_gap_stop_advertising();
     if (ret) {
         ESP_LOGE(TAG, "gap stop advertising failed");
@@ -548,6 +537,7 @@ void ble_event_task(void *pvParameters) {
 
     // only BT host id change for now
     bt_event_t event;
+    bt_host_t host;
 
     ESP_LOGI(TAG, "Starting ble event task");
 
@@ -565,6 +555,14 @@ void ble_event_task(void *pvParameters) {
                     switch (event.type) {
                         case BT_EVENT_CHANGE_HOST: {
                             ESP_LOGD(TAG, "Event: Change host");
+                            ble_change_host(event.host_id);
+                            break;
+                        }
+                        case BT_EVENT_RESET_HOST: {
+                            ESP_LOGD(TAG, "Event: Change host");
+                            memset(&host, 0x00, sizeof(bt_host_t));
+                            // ble_save_host(host);
+                            memory__set_bluetooth_host(event.host_id, host);
                             ble_change_host(event.host_id);
                             break;
                         }

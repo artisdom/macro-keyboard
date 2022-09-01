@@ -176,6 +176,16 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
+                case EVENT_BT_RESET_DEVICE: {
+                    bt_event.type = BT_EVENT_RESET_HOST;
+                    bt_event.host_id = event.data;
+
+                    if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
+                        ESP_LOGI(TAG, "Resetting BLE device at %d", event.data);
+                        xQueueSend(ble_event_q, &bt_event, (TickType_t) 0);
+                    }
+                    break;
+                }
                 case EVENT_TOGGLE_SWITCH: {
                     if ((event.data == TOGGLE_BLE) && BLE_ENABLED) {
                         mode = event.data;
