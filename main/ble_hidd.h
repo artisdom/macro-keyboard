@@ -9,11 +9,13 @@
 // Tasks
 extern TaskHandle_t xBLE_keyboard_task;
 extern TaskHandle_t xBLE_media_task;
+extern TaskHandle_t xBLE_battery_task;
 extern TaskHandle_t xBLE_event_task;
 
 // Queues
 extern QueueHandle_t ble_keyboard_q;
 extern QueueHandle_t ble_media_q;
+extern QueueHandle_t ble_battery_q;
 extern QueueHandle_t ble_event_q;
 
 // Struct to store in NVS
@@ -39,6 +41,7 @@ esp_err_t ble_deinit(void);
 
 void ble_keyboard_task(void *pvParameters);
 void ble_media_task(void *pvParameters);
+void ble_battery_task(void *pvParameters);
 void ble_event_task(void *pvParameters);
 
 

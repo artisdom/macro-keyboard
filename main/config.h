@@ -28,10 +28,11 @@
 
 
 /* --------- Global configs --------- */
-#define DEEP_SLEEP_ENABLED  	(1)
+#define DEEP_SLEEP_ENABLED  	(0)
 #define DEEP_SLEEP_TIMEOUT  	(120) //in seconds 
-#define USB_ENABLED         	(0) // enable hid over usb
-#define TOGGLE_SWITCH_ENABLED   (1)
+#define USB_ENABLED         	(1) // enable hid over usb
+#define TOGGLE_SWITCH_ENABLED   (0)
+#define BATTERY_ENABLED         (1)
 
 
 /* --------- Led matrix configs --------- */

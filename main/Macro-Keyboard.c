@@ -20,6 +20,7 @@
 #include "leds.h"
 #include "events.h"
 #include "toggle_switch.h"
+#include "battery.h"
 #include "ble_hidd.h"
 
 
@@ -28,6 +29,7 @@
 #define SEC_TO_MIN 60
 
 #define DEEP_SLEEP_TASK_RATE (5000) //in ms
+#define BATTERY_TASK_RATE (DEEP_SLEEP_TIMEOUT * 1000 / 2)  //in ms
 
 
 /* --------- Local Variables --------- */
@@ -78,6 +80,31 @@ void keyboard_task(void *parameters) {
     }
     vTaskDelete(NULL);
     
+}
+
+
+void battery_task(void *pvParameters) {
+
+    ESP_LOGI(TAG, "Starting battery task");
+
+    while(1) {
+        uint32_t battery_level = battery__get_level();
+
+        if (battery_level > 100) {
+            battery_level = 100;
+
+            // if charging, disable DEEP_SLEEP
+            DEEP_SLEEP = false;
+        }
+
+
+        if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
+            xQueueSend(ble_battery_q, &battery_level, (TickType_t) 0);
+        }
+
+        vTaskDelay(BATTERY_TASK_RATE / portTICK_PERIOD_MS);
+    }
+
 }
 
 
@@ -220,6 +247,7 @@ static void logging_init() {
     esp_log_level_set("memory", ESP_LOG_INFO);
     esp_log_level_set("leds", ESP_LOG_INFO);
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
+    esp_log_level_set("battery", ESP_LOG_DEBUG);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
 
 }
@@ -262,7 +290,13 @@ void app_main(void) {
         leds__init();
     }
 
+    if (BATTERY_ENABLED) {
+        battery__init();
+        xTaskCreatePinnedToCore(battery_task, "battery task", 2048, NULL, configMAX_PRIORITIES, NULL, 1);
+    }
+
     xTaskCreatePinnedToCore(keyboard_task, "keyboard task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
+
     if (DEEP_SLEEP_ENABLED) {
         xTaskCreatePinnedToCore(deep_sleep_task, "deep sleep task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
     }

@@ -36,12 +36,15 @@
 /* --------- Global Variables --------- */
 TaskHandle_t xBLE_keyboard_task;
 TaskHandle_t xBLE_media_task;
+TaskHandle_t xBLE_battery_task;
 TaskHandle_t xBLE_event_task;
 
 // Input queue for sending keyboard reports
 QueueHandle_t ble_keyboard_q;
 // Input queue for sending media/Consumer control reports
 QueueHandle_t ble_media_q;
+// Input queue for sending battery reports
+QueueHandle_t ble_battery_q;
 // Input queue for receiving ble events to handle
 QueueHandle_t ble_event_q;
 
@@ -305,10 +308,12 @@ void ble_init(void) {
     // Create queues
     ble_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
     ble_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
+    ble_battery_q = xQueueCreate(32, sizeof(uint8_t));
     ble_event_q = xQueueCreate(32, sizeof(bt_event_t));
 
     // Initialize NVS.
     ret = nvs_flash_init();
+
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
@@ -374,6 +379,7 @@ void ble_init(void) {
     // Create tasks
     xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
     xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_media_task, 0);
+    xTaskCreatePinnedToCore(ble_battery_task, "ble_battery_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_battery_task, 0);
     xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 8096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
 }
 
@@ -497,6 +503,42 @@ void ble_media_task(void *pvParameters) {
     }
 
     ESP_LOGW(TAG, "Stopping ble media task");
+    vTaskDelete(NULL);
+
+}
+
+
+void ble_battery_task(void *pvParameters) {
+
+    uint8_t battery_report;
+
+    ESP_LOGI(TAG, "Starting ble battery task");
+
+    if (ble_battery_q == NULL) {
+        ESP_LOGW(TAG, "battery queue not initialised, resetting...");
+        xQueueReset(ble_battery_q);
+    }
+
+    while(run_tasks) {
+        //check if queue is initialized
+        if (ble_media_q != NULL) {
+            //pend on MQ, if timeout triggers, just wait again.
+            if (xQueueReceive(ble_battery_q, &battery_report, (TickType_t) 100)) {
+                //if we are not connected, discard.
+                if (sec_conn == false)
+                    continue;
+                ESP_LOGD(TAG, "battery report: %d%%", battery_report);
+                esp_ble_gatts_set_attr_value(42, sizeof(uint8_t), &battery_report);
+                esp_ble_gatts_send_indicate(hidd_le_env.gatt_if, hid_conn_id, 42, sizeof(uint8_t), &battery_report, false);
+            }
+        }
+        else {
+            ESP_LOGE(TAG, "battery queue not initialized, retry in 1s");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+    }
+
+    ESP_LOGW(TAG, "Stopping ble battery task");
     vTaskDelete(NULL);
 
 }

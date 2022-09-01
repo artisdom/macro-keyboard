@@ -9,6 +9,7 @@ A Macro keyboard built on ESP32.
 - Shift modifier: hold the shift key to access a new layout.
 - Macros: fakes multiple key presses on a single key.
 - Deep sleep
+- Battery level reports
 - Support for multiple BLE hosts and specific key layout to switch between them.
 
 
@@ -18,8 +19,9 @@ A Macro keyboard built on ESP32.
 - Create an HID level to create packets to be route to BLE or USB later on.
 - KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 - Better NVS stuff (layouts, configs, ...etc).
-- Battery management and reports.
-- LEDs?
+- Better Battery reports (when init ble connection use read level + adc calibration) + detect USB to define if battery is charging and deep sleep should be paused.
+- LEDs? To be finalised and better once final proto is done (use event handler).
+- Bluetooth connection reset keycode to delete NVS host + start advertising.
 - USB HID (with ESP32-S3).
 - Toggle switch between BLE and USB (partially done).
 - MIDI device?
