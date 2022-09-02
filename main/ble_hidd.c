@@ -559,7 +559,7 @@ void ble_event_task(void *pvParameters) {
                             break;
                         }
                         case BT_EVENT_RESET_HOST: {
-                            ESP_LOGD(TAG, "Event: Change host");
+                            ESP_LOGD(TAG, "Event: Reset host");
                             memset(&host, 0x00, sizeof(bt_host_t));
                             // ble_save_host(host);
                             memory__set_bluetooth_host(event.host_id, host);

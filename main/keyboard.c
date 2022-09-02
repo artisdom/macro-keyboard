@@ -283,7 +283,7 @@ uint8_t *keyboard__check_state() {
                 }
 
                 // normal key report
-                if (report_index < HID_REPORT_LEN) {
+                if (keycode <= 0xFF && report_index < HID_REPORT_LEN) {
 
                     uint8_t modifier = keyboard__check_modifier(keycode);
                     if (modifier) {

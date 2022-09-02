@@ -23,7 +23,7 @@ layout_t empty_layout = {
 
 // Layout 1
 layout_t layout_1 = {
-    {KC_BLUETOOTH, KC_CC_PLAY_PAUSE, KC_CC_VOL_UP}
+    {KC_BLUETOOTH, KC_A, KC_CC_VOL_UP}
 };
 layout_t shift_layout_1 = {
     {KC_SHIFT, KC_G, KC_H}
@@ -40,7 +40,7 @@ layout_t layout_modifier_keymap = {
 };
 // Bluetooth modifier layout (when clicking on the KC_BLUETOOTH key)
 layout_t bluetooth_modifier_keymap = {
-    {KC_BLUETOOTH, KC_BT_DEVICE_0, KC_BT_DEVICE_1}
+    {KC_BLUETOOTH, KC_BT_DEVICE_RESET, KC_BT_DEVICE_0}
 };
 
 
