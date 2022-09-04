@@ -1,6 +1,8 @@
 # Macro Keyboard
 
-A Macro keyboard built on ESP32.
+A Macro keyboard built on ESP32-S3.    
+
+Using esp-idf v5.0-beta1
 
 
 ## Features

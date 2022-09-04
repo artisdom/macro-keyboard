@@ -102,7 +102,7 @@ static uint32_t increment_counter(nvs_handle_t handle, char *key) {
     err = nvs_commit(handle);
     ESP_ERROR_CHECK(err);
 
-    ESP_LOGI(TAG, "%s : %d", key, counter);
+    ESP_LOGI(TAG, "%s : %ld", key, counter);
 
     return counter;
 }

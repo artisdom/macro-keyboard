@@ -18,6 +18,7 @@ set( srcs   "Macro-Keyboard.c"
 set (include_dirs ".")
 
 idf_component_register( SRCS "${srcs}"
-                    INCLUDE_DIRS "${include_dirs}")
+                    INCLUDE_DIRS "${include_dirs}"
+                    REQUIRES esp_system esp_timer esp_event bt esp_adc driver nvs_flash tinyusb)
 
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-const-variable)
+target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-const-variable -fdiagnostics-color=always)

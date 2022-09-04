@@ -413,6 +413,7 @@ esp_err_t ble_deinit() {
     ESP_LOGI(TAG, "Deleting BLE queues");
     vQueueDelete(ble_keyboard_q);
     vQueueDelete(ble_media_q);
+    vQueueDelete(ble_battery_q);
     vQueueDelete(ble_event_q);
 
     ESP_LOGI(TAG, "Successful BLE deinit");

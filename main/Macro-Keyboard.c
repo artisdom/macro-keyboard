@@ -4,9 +4,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-#include "tinyusb.h"
-#include "tusb_cdc_acm.h"
-#include "tusb_console.h"
 #include "esp_event.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
@@ -299,15 +296,14 @@ void app_main(void) {
 
     if (BATTERY_ENABLED) {
         battery__init();
-        xTaskCreatePinnedToCore(battery_task, "battery task", 2048, NULL, configMAX_PRIORITIES, NULL, 1);
+        xTaskCreatePinnedToCore(battery_task, "battery task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
     }
 
     xTaskCreatePinnedToCore(keyboard_task, "keyboard task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
+    xTaskCreatePinnedToCore(event_handler_task, "event handler task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
 
     if (DEEP_SLEEP_ENABLED) {
         xTaskCreatePinnedToCore(deep_sleep_task, "deep sleep task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
     }
-
-    xTaskCreatePinnedToCore(event_handler_task, "event handler task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
 
 }

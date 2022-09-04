@@ -115,7 +115,7 @@ void matrix__scan() {
         gpio_set_level(row_gpios[row], 1);
     }
 
-    ESP_LOGD(TAG, "%d states: %d, %d, %d", millis(), matrix_state[0][0], matrix_state[0][1], matrix_state[0][2]);
+    ESP_LOGD(TAG, "%ld states: %d, %d, %d", millis(), matrix_state[0][0], matrix_state[0][1], matrix_state[0][2]);
 
 }
 
