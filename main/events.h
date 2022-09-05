@@ -1,6 +1,8 @@
 #ifndef MACRO_KEYBOARD_H
 #define MACRO_KEYBOARD_H
 
+#include "freertos/queue.h"
+
 // Contains declarations used by the event handler task
 
 typedef enum event_type_e {

@@ -90,22 +90,12 @@ static esp_ble_adv_params_t hidd_adv_params = {
     .adv_int_max        = 0x30,
     .adv_type           = ADV_TYPE_IND,
     .own_addr_type      = BLE_ADDR_TYPE_PUBLIC,
-    // .peer_addr          = {0xa0, 0x99, 0x9b, 0x02, 0xf0, 0x32},
+    // .peer_addr          = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     // .peer_addr_type     = BLE_ADDR_TYPE_PUBLIC,
     .channel_map        = ADV_CHNL_ALL,
     .adv_filter_policy  = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
 
-// static esp_ble_adv_params_t hidd_adv_params_directed = {
-//     .adv_int_min        = 0x20,
-//     .adv_int_max        = 0x30,
-//     .adv_type           = ADV_TYPE_DIRECT_IND_LOW,
-//     .own_addr_type      = BLE_ADDR_TYPE_PUBLIC,
-//     .peer_addr          = {0xa0, 0x99, 0x9b, 0x02, 0xf0, 0x32},
-//     .peer_addr_type     = BLE_ADDR_TYPE_PUBLIC,
-//     .channel_map        = ADV_CHNL_ALL,
-//     .adv_filter_policy  = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
-// };
 
 
 /* --------- Local Function --------- */
@@ -369,7 +359,7 @@ void ble_init(void) {
     xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
     xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_media_task, 0);
     xTaskCreatePinnedToCore(ble_battery_task, "ble_battery_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_battery_task, 0);
-    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 8096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
+    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
 }
 
 

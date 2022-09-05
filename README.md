@@ -12,18 +12,20 @@ Using esp-idf v5.0-beta1
 - Macros: fakes multiple key presses on a single key.
 - Deep sleep
 - Battery level reports
+- HID over USB or BLE.
 - Support for multiple BLE hosts and specific key layout to switch between them.
 
 
 ## Todo
 
 - Put BLE stuff in it's own component/folder.
-- Create an HID level to create packets to be route to BLE or USB later on.
+- Create an HID level to create packets to be routed to BLE or USB later on.
 - KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level + adc calibration)
 - LEDs? To be finalised and better once final proto is done (use event handler).
-- USB HID (with ESP32-S3).
+- Clean up HID descriptors to make them common between USB and BLE stacks.
+- Better USB deinit (waiting on TinyUSB implementation).
 - Toggle switch between BLE and USB (partially done).
 - MIDI device?
 - Mutiple BLE hosts in parallel? + BLE 5 features?

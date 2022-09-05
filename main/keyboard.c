@@ -3,6 +3,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_log.h"
 
@@ -11,7 +12,6 @@
 #include "key_definitions.h"
 #include "config.h"
 #include "matrix.h"
-#include "ble_hidd.h"
 #include "events.h"
 
 
@@ -34,6 +34,8 @@ static uint8_t hid_report[2 + HID_REPORT_LEN] = {0};
 static uint8_t hid_report_index = 2;
 // store where each key is set in the HID report
 static uint8_t hid_report_key_index[MATRIX_ROWS][MATRIX_COLS] = {0};
+
+extern QueueHandle_t media_q;
 
 
 /* --------- Local Functions --------- */
@@ -179,7 +181,7 @@ static void keyboard__handle_media(uint16_t keycode, uint8_t keystate) {
     media_state[0] = keycode - KC_CC_OFFSET;
     media_state[1] = keystate;
 
-    xQueueSend(ble_media_q, (void*) &media_state, (TickType_t) 0);
+    xQueueSend(media_q, (void*) &media_state, (TickType_t) 0);
 
 
 }

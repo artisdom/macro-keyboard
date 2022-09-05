@@ -303,7 +303,7 @@ static uint8_t battary_lev = 50;
 /// Full HRS Database Description - Used to add attributes into the database
 static const esp_gatts_attr_db_t bas_att_db[BAS_IDX_NB] =
 {
-    // Battary Service Declaration
+    // Battery Service Declaration
     [BAS_IDX_SVC]               =  {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&primary_service_uuid, ESP_GATT_PERM_READ,
                                             sizeof(uint16_t), sizeof(battary_svc), (uint8_t *)&battary_svc}},
 

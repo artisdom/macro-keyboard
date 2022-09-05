@@ -11,7 +11,8 @@ set( srcs   "Macro-Keyboard.c"
             "ble_hidd.c"
             "esp_hidd_prf_api.c"
             "hid_dev.c"
-            "hid_device_le_prf.c")
+            "hid_device_le_prf.c"
+            "usb.c")
 
 #Set include directories
 # Add all your include file path here

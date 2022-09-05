@@ -19,6 +19,12 @@
 #include "toggle_switch.h"
 #include "battery.h"
 #include "ble_hidd.h"
+#include "usb.h"
+
+
+/* --------- Global Variables --------- */
+QueueHandle_t event_q;
+QueueHandle_t media_q;
 
 
 /* --------- Local Defines --------- */
@@ -34,8 +40,7 @@ static const char *TAG = "main";
 
 static bool DEEP_SLEEP = true;
 
-static uint8_t mode = TOGGLE_BLE;
-QueueHandle_t event_q;
+static uint8_t mode = TOGGLE_USB;
 
 
 
@@ -52,7 +57,6 @@ void keyboard_task(void *parameters) {
 
         // only send report if it changed
         if (memcmp(past_report, current_report, sizeof(past_report)) != 0) {
-            void *report;
             DEEP_SLEEP = false;
 
             // if (ble_keyboard_q == NULL) {
@@ -60,7 +64,6 @@ void keyboard_task(void *parameters) {
             //     continue;
             // }
 
-            report = (void *) &current_report;
             memcpy(past_report, current_report, sizeof(past_report));
 
             ESP_LOGD(TAG, "HID report:  %d,%d, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
@@ -68,7 +71,10 @@ void keyboard_task(void *parameters) {
                 current_report[4], current_report[5], current_report[6], current_report[7]);
 
             if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
-                xQueueSend(ble_keyboard_q, report, (TickType_t) 0);
+                xQueueSend(ble_keyboard_q, (void *) current_report, (TickType_t) 0);
+            }
+            if (USB_ENABLED && (mode == TOGGLE_USB)) {
+                xQueueSend(usb_keyboard_q, (void *) current_report, (TickType_t) 0);
             }
 
         }
@@ -77,6 +83,40 @@ void keyboard_task(void *parameters) {
     }
     vTaskDelete(NULL);
     
+}
+
+
+void media_task(void *pvParameters) {
+
+    uint8_t report[HID_CC_REPORT_LEN];
+    uint8_t past_report[HID_CC_REPORT_LEN];
+
+    ESP_LOGI(TAG, "Starting media task");
+
+    while(1) {
+
+        if (xQueueReceive(media_q, &report, (TickType_t) 100)) {
+            // only send report if it changed
+            if(memcmp(past_report, report, sizeof(past_report)) != 0) {
+                DEEP_SLEEP = false;
+                memcpy(past_report, report, sizeof(past_report));
+
+                ESP_LOGD(TAG, "HID CC report:  %d,%d", report[0], report[1]);
+
+                if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
+                    xQueueSend(ble_media_q, (void *) report, (TickType_t) 0);
+                }
+                if (USB_ENABLED && (mode == TOGGLE_USB)) {
+                    xQueueSend(usb_media_q, (void *) report, (TickType_t) 0);
+                }
+
+            }    
+        }
+
+        vTaskDelay(KEYBOARD_RATE / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+
 }
 
 
@@ -123,6 +163,11 @@ void deep_sleep_task(void *pvParameters) {
 
                 // wake up esp32 using rtc gpio
                 if (BLE_ENABLED && (mode == TOGGLE_BLE) && (ble_deinit() != ESP_OK)) {
+                    ESP_LOGE(TAG, "Unable to go to sleep!");
+                    DEEP_SLEEP = false;
+                    continue;                    
+                }
+                if (USB_ENABLED && (mode == TOGGLE_USB) && (usb__deinit() != ESP_OK)) {
                     ESP_LOGE(TAG, "Unable to go to sleep!");
                     DEEP_SLEEP = false;
                     continue;                    
@@ -188,12 +233,13 @@ void event_handler_task(void *parameters) {
                         mode = event.data;
                         ESP_LOGI(TAG, "Toggle BLE");
                         ble_init();
+                        usb__deinit();
                     }
                     else if ((event.data == TOGGLE_USB) && USB_ENABLED) {
                         mode = event.data;
                         ESP_LOGI(TAG, "Toggle USB");
                         ble_deinit();
-                        //WIP
+                        usb__init();
                     }
                     else {
                         ESP_LOGW(TAG, "Unknown toggle event type");
@@ -216,15 +262,6 @@ void event_handler_task(void *parameters) {
 static void logging_init() {
 
     if (USB_ENABLED) {
-        // tinyusb_config_t tusb_cfg = { 0 }; // the configuration uses default values
-        // ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
-
-        // tinyusb_config_cdcacm_t amc_cfg = { 0 }; // the configuration uses default values
-        // ESP_ERROR_CHECK(tusb_cdc_acm_init(&amc_cfg));
-        
-        // esp_tusb_init_console(TINYUSB_CDC_ACM_0); // log to usb
-
-
         // change UART default pins
         uart_config_t uart_config = {
             .baud_rate = 115200,
@@ -243,6 +280,7 @@ static void logging_init() {
 
     // ESP-IDF modules
     esp_log_level_set("*", ESP_LOG_INFO);
+    esp_log_level_set("TinyUSB", ESP_LOG_INFO);
 
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
@@ -252,7 +290,9 @@ static void logging_init() {
     esp_log_level_set("leds", ESP_LOG_INFO);
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("battery", ESP_LOG_DEBUG);
+    esp_log_level_set("usb", ESP_LOG_INFO);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
+    esp_log_level_set("hid_le_prf", ESP_LOG_INFO);
 
 }
 
@@ -278,6 +318,7 @@ void app_main(void) {
     }
 
     event_q = xQueueCreate(32, sizeof(event_t));
+    media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
 
     matrix__init();
     keyboard__init();
@@ -288,6 +329,9 @@ void app_main(void) {
     }
     if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
         ble_init();
+    }
+    if (USB_ENABLED && (mode == TOGGLE_USB)) {
+        usb__init();
     }
 
     if (LED_ENABLED) {
@@ -300,6 +344,7 @@ void app_main(void) {
     }
 
     xTaskCreatePinnedToCore(keyboard_task, "keyboard task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
+    xTaskCreatePinnedToCore(media_task, "media task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
     xTaskCreatePinnedToCore(event_handler_task, "event handler task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
 
     if (DEEP_SLEEP_ENABLED) {
