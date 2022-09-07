@@ -13,5 +13,7 @@ void      memory__set_bluetooth_host(uint8_t host_id, bt_host_t host);
 bt_host_t memory__get_bluetooth_host(uint8_t host_id);
 void      memory__set_bluetooth_last_host(uint8_t host_id);
 uint8_t   memory__get_bluetooth_last_host();
+void      memory__set_leds_brightness(uint8_t brightness);
+uint8_t   memory__get_leds_brightness();
 
 #endif

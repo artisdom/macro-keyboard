@@ -4,8 +4,9 @@
 
 void leds__init();
 void leds__set_brightness(uint8_t level);
+void leds__increase_brightness();
+void leds__decrease_brightness();
 
-// void leds__task(void *pvParameters);
 
 
 

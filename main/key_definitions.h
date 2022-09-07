@@ -489,6 +489,10 @@ enum internal_special_keycodes {
     KC_MACRO_7,
     KC_MACRO_8,
     KC_MACRO_9,
+
+    /* Leds control */
+    KC_LEDS_INCREASE = 0x230,
+    KC_LEDS_DECREASE,
 };
 
 #define KC_BASE_MODIFIERS  KC_LAYOUT
@@ -499,5 +503,7 @@ enum internal_special_keycodes {
 #define KC_MAX_BLUETOOTH   KC_BT_DEVICE_2
 #define KC_BASE_MACRO      KC_MACRO_0
 #define KC_MAX_MACRO       KC_MACRO_9
+#define KC_BASE_LEDS       KC_LEDS_INCREASE
+#define KC_MAX_LEDS        KC_LEDS_DECREASE
 
 #endif

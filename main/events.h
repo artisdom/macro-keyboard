@@ -9,8 +9,9 @@ typedef enum event_type_e {
 	EVENT_BT_CHANGE_DEVICE = 0x01,
 	EVENT_BT_RESET_DEVICE,
 	EVENT_TOGGLE_SWITCH,
+	EVENT_LEDS_BRIGHTNESS,
 
-	EVENT_MAX = 0xFF, // make sure it's 16 bits
+	EVENT_MAX = 0xFF,
 } event_type_t;
 
 

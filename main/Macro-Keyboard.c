@@ -40,7 +40,7 @@ static const char *TAG = "main";
 
 static bool DEEP_SLEEP = true;
 
-static uint8_t mode = TOGGLE_USB;
+static uint8_t mode = TOGGLE_BLE;
 
 
 
@@ -246,6 +246,19 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
+                case EVENT_LEDS_BRIGHTNESS: {
+                    if (LED_ENABLED) {
+                        if (event.data == 0) {
+                            ESP_LOGI(TAG, "Leds increase brightness");
+                            leds__increase_brightness();
+                        }
+                        else {
+                            ESP_LOGI(TAG, "Leds decrease brightness");
+                            leds__decrease_brightness();
+                        }
+                    }
+                    break;
+                }
                 default:
                     ESP_LOGW(TAG, "Unhandled event type");
                     break;
@@ -280,14 +293,15 @@ static void logging_init() {
 
     // ESP-IDF modules
     esp_log_level_set("*", ESP_LOG_INFO);
+    esp_log_level_set("ledc", ESP_LOG_DEBUG);
     esp_log_level_set("TinyUSB", ESP_LOG_INFO);
 
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
     esp_log_level_set("keyboard", ESP_LOG_INFO);
-    esp_log_level_set("memory", ESP_LOG_INFO);
-    esp_log_level_set("leds", ESP_LOG_INFO);
+    esp_log_level_set("memory", ESP_LOG_DEBUG);
+    esp_log_level_set("leds", ESP_LOG_DEBUG);
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("battery", ESP_LOG_DEBUG);
     esp_log_level_set("usb", ESP_LOG_INFO);

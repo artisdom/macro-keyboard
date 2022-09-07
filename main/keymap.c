@@ -22,8 +22,11 @@ layout_t empty_layout = {
 };
 
 // Layout 1
+// layout_t layout_1 = {
+//     {KC_BLUETOOTH, KC_A, KC_CC_VOL_UP}
+// };
 layout_t layout_1 = {
-    {KC_BLUETOOTH, KC_A, KC_CC_VOL_UP}
+    {KC_BLUETOOTH, KC_LEDS_INCREASE, KC_LEDS_DECREASE}
 };
 layout_t shift_layout_1 = {
     {KC_SHIFT, KC_G, KC_H}

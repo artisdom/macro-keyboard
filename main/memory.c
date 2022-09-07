@@ -152,6 +152,24 @@ uint8_t memory__get_bluetooth_last_host() {
 }
 
 
+void memory__set_leds_brightness(uint8_t brightness) {
+    esp_err_t err;
+
+    ESP_LOGD(TAG, "Setting leds brightness: %d", brightness);
+    err = nvs_set_u8(keyboard_handle, "brightness", brightness);
+    ESP_ERROR_CHECK(err);
+}
+
+
+uint8_t memory__get_leds_brightness() {
+    uint8_t brightness = 0;
+
+    mem_get_u8(keyboard_handle, "brightness", &brightness);
+
+    return brightness;
+}
+
+
 static void mem_get_u8(nvs_handle_t handle, char *key, void *to) {
 
     esp_err_t err = nvs_get_u8(handle, key, to);

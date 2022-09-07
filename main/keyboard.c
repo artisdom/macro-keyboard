@@ -284,6 +284,15 @@ uint8_t *keyboard__check_state() {
                     continue;
                 }
 
+                // leds controls
+                if (keycode >= KC_BASE_LEDS && keycode <= KC_MAX_LEDS) {
+                    event_t event = {
+                        .type = EVENT_LEDS_BRIGHTNESS,
+                        .data = keycode - KC_BASE_LEDS,
+                    };
+                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                }
+
                 // normal key report
                 if (keycode <= 0xFF && report_index < HID_REPORT_LEN) {
 
