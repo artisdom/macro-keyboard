@@ -50,12 +50,12 @@ layout_t bluetooth_modifier_keymap = {
 /* --------- Layout Arrays --------- */
 // Normal layouts
 layout_t *keymaps[NUM_LAYOUTS] = {
-	&layout_1, 
-	&layout_2
+    &layout_1, 
+    &layout_2
 };
 
 // Shift layouts (need one per layout in the array above)
 layout_t *shift_keymaps[NUM_LAYOUTS] = {
-	&shift_layout_1,
-	&empty_layout
+    &shift_layout_1,
+    &empty_layout
 };

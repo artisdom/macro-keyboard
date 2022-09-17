@@ -130,8 +130,8 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
             break;
         }
         case ESP_HIDD_EVENT_DEINIT_FINISH:
-	     break;
-		case ESP_HIDD_EVENT_BLE_CONNECT: {
+         break;
+        case ESP_HIDD_EVENT_BLE_CONNECT: {
             ESP_LOGI(TAG, "ESP_HIDD_EVENT_BLE_CONNECT");
             hid_conn_id = param->connect.conn_id;
             break;
@@ -163,7 +163,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
              ESP_LOGD(TAG, "%x:",param->ble_security.ble_req.bd_addr[i]);
         }
         esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
-	 break;
+     break;
      case ESP_GAP_BLE_AUTH_CMPL_EVT:
         sec_conn = true;
         bt_host_t host;

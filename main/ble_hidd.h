@@ -20,19 +20,19 @@ extern QueueHandle_t ble_event_q;
 
 // Struct to store in NVS
 typedef struct bt_host_s {
-	esp_bd_addr_t addr;
-	esp_ble_addr_type_t type;
+    esp_bd_addr_t addr;
+    esp_ble_addr_type_t type;
 } bt_host_t;
 
 
 // Definitions for events
 enum bt_event_type_e {
-	BT_EVENT_CHANGE_HOST = 0x01,
-	BT_EVENT_RESET_HOST,
+    BT_EVENT_CHANGE_HOST = 0x01,
+    BT_EVENT_RESET_HOST,
 };
 typedef struct bt_event_s {
-	uint8_t type;
-	uint8_t host_id;	
+    uint8_t type;
+    uint8_t host_id;    
 } bt_event_t;
 
 
