@@ -101,8 +101,8 @@ void usb__init() {
     usb_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
     usb_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
 
-    xTaskCreatePinnedToCore(usb__keyboard_task, "usb_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xUSB_keyboard_task, 0);
-    xTaskCreatePinnedToCore(usb__media_task, "usb_media_task", 2048, NULL, configMAX_PRIORITIES, &xUSB_media_task, 0);
+    xTaskCreatePinnedToCore(usb__keyboard_task, "usb_keyboard_task", USB_KEYBOARD_TASK_STACK, NULL, USB_KEYBOARD_TASK_PRIORITY, &xUSB_keyboard_task, 0);
+    xTaskCreatePinnedToCore(usb__media_task, "usb_media_task", USB_MEDIA_TASK_STACK, NULL, USB_MEDIA_TASK_PRIORITY, &xUSB_media_task, 0);
 }
 
 

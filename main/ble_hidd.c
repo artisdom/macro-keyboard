@@ -383,10 +383,10 @@ void ble_init(void) {
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
 
     // Create tasks
-    xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
-    xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_media_task, 0);
-    xTaskCreatePinnedToCore(ble_battery_task, "ble_battery_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_battery_task, 0);
-    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 4096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
+    xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", BLE_KEYBOARD_TASK_STACK, NULL, BLE_KEYBOARD_TASK_PRIORITY, &xBLE_keyboard_task, 0);
+    xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", BLE_MEDIA_TASK_STACK, NULL, BLE_MEDIA_TASK_PRIORITY, &xBLE_media_task, 0);
+    xTaskCreatePinnedToCore(ble_battery_task, "ble_battery_task", BLE_BATTERY_TASK_STACK, NULL, BLE_BATTERY_TASK_PRIORITY, &xBLE_battery_task, 0);
+    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", BLE_EVENT_TASK_STACK, NULL, BLE_EVENT_TASK_PRIORITY, &xBLE_event_task, 0);
 }
 
 

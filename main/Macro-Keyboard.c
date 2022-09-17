@@ -363,15 +363,15 @@ void app_main(void) {
 
     if (BATTERY_ENABLED) {
         battery__init();
-        xTaskCreatePinnedToCore(battery_task, "battery task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
+        xTaskCreatePinnedToCore(battery_task, "battery task", BATTERY_TASK_STACK, NULL, BATTERY_TASK_PRIORITY, NULL, 1);
     }
 
-    xTaskCreatePinnedToCore(keyboard_task, "keyboard task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
-    xTaskCreatePinnedToCore(media_task, "media task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
-    xTaskCreatePinnedToCore(event_handler_task, "event handler task", 8192, NULL, configMAX_PRIORITIES, NULL, 1);
+    xTaskCreatePinnedToCore(keyboard_task, "keyboard task", KEYBOARD_TASK_STACK, NULL, KEYBOARD_TASK_PRIORITY, NULL, 1);
+    xTaskCreatePinnedToCore(media_task, "media task", MEDIA_TASK_STACK, NULL, MEDIA_TASK_PRIORITY, NULL, 1);
+    xTaskCreatePinnedToCore(event_handler_task, "event handler task", EVENT_HANDLER_TASK_STACK, NULL, EVENT_HANDLER_TASK_PRIORITY, NULL, 1);
 
     if (DEEP_SLEEP_ENABLED) {
-        xTaskCreatePinnedToCore(deep_sleep_task, "deep sleep task", 4096, NULL, configMAX_PRIORITIES, NULL, 1);
+        xTaskCreatePinnedToCore(deep_sleep_task, "deep sleep task", DEEP_SLEEP_TASK_STACK, NULL, DEEP_SLEEP_TASK_PRIORITY, NULL, 1);
     }
 
 }
