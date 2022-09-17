@@ -43,7 +43,7 @@ layout_t layout_modifier_keymap = {
 };
 // Bluetooth modifier layout (when clicking on the KC_BLUETOOTH key)
 layout_t bluetooth_modifier_keymap = {
-    {KC_BLUETOOTH, KC_BT_DEVICE_RESET, KC_BT_DEVICE_0}
+    {KC_BLUETOOTH, KC_BT_DEVICE_0, KC_BT_DEVICE_RESET}
 };
 
 

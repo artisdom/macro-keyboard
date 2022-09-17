@@ -259,6 +259,15 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
+                case EVENT_LEDS_BT_ADV:
+                case EVENT_LEDS_BT_ADV_ALL:
+                case EVENT_LEDS_BT_CONNECTED: {
+                    if (LED_ENABLED && LED_EFFECTS_ENABLED) {
+                        ESP_LOGI(TAG, "Leds BT event");
+                        xQueueSend(leds_q, &event, (TickType_t) 0);
+                    }
+                    break;
+                }
                 default:
                     ESP_LOGW(TAG, "Unhandled event type");
                     break;

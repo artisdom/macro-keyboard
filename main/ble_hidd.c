@@ -30,6 +30,7 @@
 #include "ble_hidd.h"
 #include "config.h"
 #include "memory.h"
+#include "events.h"
 
 
 
@@ -101,6 +102,7 @@ static esp_ble_adv_params_t hidd_adv_params = {
 /* --------- Local Function --------- */
 static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param);
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+static esp_err_t ble_start_advertising(esp_ble_adv_params_t *adv_params);
 
 static void ble_set_host(uint8_t host_id);
 static void ble_set_host_adv_params(bt_host_t host);
@@ -137,7 +139,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
         case ESP_HIDD_EVENT_BLE_DISCONNECT: {
             sec_conn = false;
             ESP_LOGI(TAG, "ESP_HIDD_EVENT_BLE_DISCONNECT");
-            esp_ble_gap_start_advertising(&hidd_adv_params);
+            ble_start_advertising(&hidd_adv_params);
             break;
         }
         case ESP_HIDD_EVENT_BLE_VENDOR_REPORT_WRITE_EVT: {
@@ -154,7 +156,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param){
     switch (event) {
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
-        esp_ble_gap_start_advertising(&hidd_adv_params);
+        ble_start_advertising(&hidd_adv_params);
         break;
      case ESP_GAP_BLE_SEC_REQ_EVT:
         for(int i = 0; i < ESP_BD_ADDR_LEN; i++) {
@@ -183,12 +185,37 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         else {
             ESP_LOGW(TAG, "Unable to save host in memory as the addr type is %d", host.type);
         }
+
+        event_t event = {
+            .type = EVENT_LEDS_BT_CONNECTED,
+            .data = current_host_id,
+        };
+        xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+
         break;
     default:
         break;
     }
 }
 
+
+// wrapper to call ble internal api and send an event to main event handler
+static esp_err_t ble_start_advertising(esp_ble_adv_params_t *adv_params) {
+
+    event_t event;
+
+    if (adv_params->peer_addr[0] == 0) { // terrible check
+        event.type = EVENT_LEDS_BT_ADV_ALL;
+    }
+    else {
+        event.type = EVENT_LEDS_BT_ADV;
+    }
+    // event.type = EVENT_LEDS_BT_ADV;
+    event.data = current_host_id;
+    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+
+    return esp_ble_gap_start_advertising(adv_params);
+}
 
 
 static uint8_t ble_get_last_host() {
@@ -254,7 +281,7 @@ static void ble_change_host(uint8_t host_id) {
         return;
     }
 
-    ret = esp_ble_gap_start_advertising(&hidd_adv_params);
+    ret = ble_start_advertising(&hidd_adv_params);
     if (ret) {
         ESP_LOGE(TAG, "gap start advertising failed");
         return;
@@ -359,7 +386,7 @@ void ble_init(void) {
     xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_keyboard_task, 0);
     xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_media_task, 0);
     xTaskCreatePinnedToCore(ble_battery_task, "ble_battery_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_battery_task, 0);
-    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 2048, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
+    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", 4096, NULL, configMAX_PRIORITIES, &xBLE_event_task, 0);
 }
 
 

@@ -14,16 +14,20 @@ Using esp-idf v5.0-beta1
 - Battery level reports
 - HID over USB or BLE.
 - Support for multiple BLE hosts and specific key layout to switch between them.
+- LED backlight with brightness control + effects for BLE actions
 
 
 ## Todo
 
 - Put BLE stuff in it's own component/folder.
 - Create an HID level to create packets to be routed to BLE or USB later on.
-- KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
+- QMK features:
+	- KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
+	- Make keymap fully compatible with QMK (maybe use the [QMK configurator](https://github.com/qmk/qmk_configurator) or the web api to compile keymaps).
+	- Make keyboard compatible with VIA to change layouts and keymaps onb the fly.
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level + adc calibration)
-- LEDs? To be finalised and better once final proto is done (use event handler).
+- LED brightness scaling curve + more low light granularity.
 - Clean up HID descriptors to make them common between USB and BLE stacks.
 - Better USB deinit (waiting on TinyUSB implementation).
 - Toggle switch between BLE and USB (partially done).
