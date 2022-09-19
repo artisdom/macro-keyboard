@@ -14,7 +14,7 @@
 /* --------- Local Variables --------- */
 static const char *TAG = "matrix";
 
-static const gpio_num_t row_gpios[MATRIX_ROWS] = {GPIO_NUM_9};
+static const gpio_num_t row_gpios[MATRIX_ROWS] = {GPIO_NUM_9, GPIO_NUM_8, GPIO_NUM_7, GPIO_NUM_6};
 static const gpio_num_t col_gpios[MATRIX_COLS] = {GPIO_NUM_5, GPIO_NUM_4, GPIO_NUM_3};
 
 uint8_t matrix_state[MATRIX_ROWS][MATRIX_COLS] = {0};

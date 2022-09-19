@@ -229,20 +229,30 @@ void event_handler_task(void *parameters) {
                     break;
                 }
                 case EVENT_TOGGLE_SWITCH: {
-                    if ((event.data == TOGGLE_BLE) && BLE_ENABLED) {
-                        mode = event.data;
-                        ESP_LOGI(TAG, "Toggle BLE");
-                        ble_init();
-                        usb__deinit();
+                    if ((event.data == TOGGLE_BLE)) {
+                        ESP_LOGW(TAG, "event toggle ble");
+                        if (USB_ENABLED) {
+                            usb__deinit();
+                        }
+                        if (BLE_ENABLED) {
+                            ESP_LOGI(TAG, "Toggle BLE");
+                            mode = event.data;
+                            ble_init();
+                        }
                     }
-                    else if ((event.data == TOGGLE_USB) && USB_ENABLED) {
-                        mode = event.data;
-                        ESP_LOGI(TAG, "Toggle USB");
-                        ble_deinit();
-                        usb__init();
+                    else if ((event.data == TOGGLE_USB)) {
+                        ESP_LOGW(TAG, "event toggle usb");
+                        if (BLE_ENABLED) {
+                            ble_deinit();
+                        }
+                        if (USB_ENABLED) {
+                            ESP_LOGI(TAG, "Toggle USB");
+                            mode = event.data;
+                            usb__init();
+                        }
                     }
                     else {
-                        ESP_LOGW(TAG, "Unknown toggle event type");
+                        ESP_LOGW(TAG, "Unknown toggle event type %d", event.data);
                     }
                     break;
                 }
@@ -302,14 +312,14 @@ static void logging_init() {
 
     // ESP-IDF modules
     esp_log_level_set("*", ESP_LOG_INFO);
-    esp_log_level_set("ledc", ESP_LOG_DEBUG);
+    esp_log_level_set("ledc", ESP_LOG_INFO);
     esp_log_level_set("TinyUSB", ESP_LOG_INFO);
 
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
     esp_log_level_set("keyboard", ESP_LOG_INFO);
-    esp_log_level_set("memory", ESP_LOG_DEBUG);
+    esp_log_level_set("memory", ESP_LOG_INFO);
     esp_log_level_set("leds", ESP_LOG_DEBUG);
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("battery", ESP_LOG_DEBUG);

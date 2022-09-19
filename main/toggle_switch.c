@@ -7,6 +7,7 @@
 #include "driver/gpio.h"
 #include "driver/rtc_io.h"
 #include "esp_sleep.h"
+#include "esp_timer.h"
 
 #include "toggle_switch.h"
 #include "config.h"
@@ -15,6 +16,8 @@
 
 /* --------- Local Defines --------- */
 #define ESP_INTR_FLAG_DEFAULT 0
+
+#define TOGGLE_SWITCH_DEBOUNCE_TIME (4000) // in us
 
 
 /* --------- Local Variables --------- */
@@ -62,12 +65,12 @@ void toggle_switch__init() {
 
 }
 
-
 uint8_t toggle_switch__get_state() {
 
-    // uint8_t ble_gpio = gpio_get_level(toggle_ble_gpio);
-    uint8_t ble_gpio = 0; //hack for now
+    uint8_t ble_gpio = gpio_get_level(toggle_ble_gpio);
     uint8_t usb_gpio = gpio_get_level(toggle_usb_gpio);
+
+    ESP_LOGD(TAG, "Toggle states %d %d", !usb_gpio, !ble_gpio);
 
     if ( !ble_gpio ) {
         return TOGGLE_BLE;
@@ -76,18 +79,24 @@ uint8_t toggle_switch__get_state() {
         return TOGGLE_USB;
     }
     else {
-        ESP_LOGW(TAG, "Impossible toggle states %d %d", ble_gpio, usb_gpio);
+        ESP_LOGE(TAG, "Impossible toggle states %d %d", usb_gpio, ble_gpio);
     }
     return TOGGLE_OFF;
 }
 
 
 static void IRAM_ATTR toggle_switch__gpio_isr_handler(void *arg) {
+    static int64_t last_interrupt;
+    int64_t time;
     event_t event = {
         .type = EVENT_TOGGLE_SWITCH,
         .data = TOGGLE_OFF,
     };
-    // event.data = *((uint8_t *)arg);
     event.data = (uint8_t) arg;
-    xQueueSendFromISR(event_q, &event, (TickType_t) 0);
+
+    time = esp_timer_get_time();
+    if (time - last_interrupt > TOGGLE_SWITCH_DEBOUNCE_TIME) {
+            xQueueSendFromISR(event_q, &event, (TickType_t) 0);
+    }
+    last_interrupt = time;
 }

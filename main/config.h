@@ -3,7 +3,7 @@
 
 
 /* --------- Key matrix configs --------- */
-#define MATRIX_ROWS             (1)
+#define MATRIX_ROWS             (4)
 #define MATRIX_COLS             (3)
 
 #define DEBOUNCE_TIME           (4)  //in ms
@@ -31,13 +31,13 @@
 #define DEEP_SLEEP_ENABLED      (0)
 #define DEEP_SLEEP_TIMEOUT      (120) //in seconds 
 #define USB_ENABLED             (0) // enable hid over usb
-#define TOGGLE_SWITCH_ENABLED   (0)
+#define TOGGLE_SWITCH_ENABLED   (1)
 #define BATTERY_ENABLED         (0)
 
 
 /* --------- Led matrix configs --------- */
 #define LED_ENABLED             (1)
-#define LED_EFFECTS_ENABLED     (1)
+#define LED_EFFECTS_ENABLED     (0)
 #define LED_ROWS                (3)
 #define LED_COLS                (3)
 
