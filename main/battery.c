@@ -50,12 +50,12 @@ static uint32_t battery__get_voltage() {
 
     for (uint16_t i = 0; i < NO_OF_SAMPLES; i++) {
         uint32_t raw = 0;
-        adc_oneshot_read(adc_handle, channel, &raw);
+        adc_oneshot_read(adc_handle, channel, (int *) &raw);
         reading += raw;
     }
     reading /= NO_OF_SAMPLES;
 
-    adc_cali_raw_to_voltage(cali_handle, reading, &voltage);
+    adc_cali_raw_to_voltage(cali_handle, reading, (int *) &voltage);
     // voltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
     bat_voltage = (uint32_t) (voltage / bat_voltage_div_ratio);
 

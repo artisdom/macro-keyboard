@@ -230,7 +230,7 @@ void event_handler_task(void *parameters) {
                 }
                 case EVENT_TOGGLE_SWITCH: {
                     if ((event.data == TOGGLE_BLE)) {
-                        ESP_LOGW(TAG, "event toggle ble");
+                        // ESP_LOGW(TAG, "event toggle ble");
                         if (USB_ENABLED) {
                             usb__deinit();
                         }
@@ -241,7 +241,7 @@ void event_handler_task(void *parameters) {
                         }
                     }
                     else if ((event.data == TOGGLE_USB)) {
-                        ESP_LOGW(TAG, "event toggle usb");
+                        // ESP_LOGW(TAG, "event toggle usb");
                         if (BLE_ENABLED) {
                             ble_deinit();
                         }

@@ -24,3 +24,4 @@ sdkconfig*
 # WIP stuff
 not_components/
 MK32/
+qmk/
