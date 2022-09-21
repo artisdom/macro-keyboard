@@ -477,8 +477,8 @@ enum internal_special_keycodes {
 
 // Macro - 256 macros max
 #define MACRO(macro) (QK_MACRO | ((macro) & 0xFF))
-#define M MACRO
-#define MA MACRO
+#define M   MACRO
+#define MA  MACRO
 
 
 // GOTO layer - 256 layer max
@@ -492,5 +492,6 @@ enum internal_special_keycodes {
 
 // Reset BT Host config - 256 hosts max
 #define BT_RESET(host)   (QK_BT_HOST_RESET | ((host) & 0xFF))
+#define BT_RST BT_RESET
 
 #endif
