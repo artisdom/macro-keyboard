@@ -24,7 +24,7 @@ Using esp-idf v5.0-beta1
 - QMK features:
 	- KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 	- Make keymap fully compatible with QMK (maybe use the [QMK configurator](https://github.com/qmk/qmk_configurator) or the web api to compile keymaps).
-	- Make keyboard compatible with VIA to change layouts and keymaps onb the fly.
+	- Make keyboard compatible with VIA to change layouts and keymaps on the fly.
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level + adc calibration)
 - LED brightness scaling curve + more low light granularity.

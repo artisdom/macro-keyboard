@@ -70,7 +70,7 @@ static TaskHandle_t xLED_task = NULL;
 
 // Dumb stuff for dev, to be changed
 static uint8_t bt_host_positions[BLE_NUM_HOSTS][2] = {
-    {0, 1}, {0, 2}, {0, 0}
+    {0, 0}, {0, 1}, {0, 2}
 };
 
 
@@ -213,6 +213,7 @@ void leds__increase_brightness() {
     if (new_brightness > 100) {
         new_brightness = 100;
     }
+    ESP_LOGI(TAG, "Setting leds to %d%%", new_brightness);
     leds__set_brightness(new_brightness);
 }
 
@@ -224,6 +225,7 @@ void leds__decrease_brightness() {
     if (new_brightness > 100) { // overflow
         new_brightness = 0;
     }
+    ESP_LOGI(TAG, "Setting leds to %d%%", new_brightness);
     leds__set_brightness(new_brightness);
 }
 

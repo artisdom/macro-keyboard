@@ -208,7 +208,7 @@ void event_handler_task(void *parameters) {
         if(xQueueReceive(event_q, &event, portMAX_DELAY)) {
             
             switch(event.type) {
-                case EVENT_BT_CHANGE_DEVICE: {
+                case EVENT_BT_CHANGE_HOST: {
                     bt_event.type = BT_EVENT_CHANGE_HOST;
                     bt_event.host_id = event.data;
 
@@ -218,7 +218,7 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
-                case EVENT_BT_RESET_DEVICE: {
+                case EVENT_BT_RESET_HOST: {
                     bt_event.type = BT_EVENT_RESET_HOST;
                     bt_event.host_id = event.data;
 
@@ -318,11 +318,11 @@ static void logging_init() {
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
-    esp_log_level_set("keyboard", ESP_LOG_INFO);
+    esp_log_level_set("keyboard", ESP_LOG_DEBUG);
     esp_log_level_set("memory", ESP_LOG_INFO);
-    esp_log_level_set("leds", ESP_LOG_DEBUG);
+    esp_log_level_set("leds", ESP_LOG_INFO);
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
-    esp_log_level_set("battery", ESP_LOG_DEBUG);
+    esp_log_level_set("battery", ESP_LOG_INFO);
     esp_log_level_set("usb", ESP_LOG_INFO);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
     esp_log_level_set("hid_le_prf", ESP_LOG_INFO);

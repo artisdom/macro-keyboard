@@ -21,13 +21,8 @@ static const char *TAG = "keyboard";
 static uint8_t keyboard_state[MATRIX_ROWS][MATRIX_COLS] = {0};
 static uint8_t keyboard_prev_state[MATRIX_ROWS][MATRIX_COLS] = {0};
 
-static uint8_t current_layout = DEFAULT_LAYOUT;
-
-static bool layout_modifier = false;
-static bool shift_modifier = false;
-static bool bluetooth_modifier = false;
-static bool bluetooth_reset_modifier = false;
-
+static uint8_t current_layer = DEFAULT_LAYER;
+static uint8_t prev_layer = DEFAULT_LAYER;
 
 // the HID report
 static uint8_t hid_report[2 + HID_REPORT_LEN] = {0};
@@ -39,67 +34,16 @@ extern QueueHandle_t media_q;
 
 
 /* --------- Local Functions --------- */
-static void keyboard__change_layout(uint16_t keycode);
 static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col);
 static uint16_t keyboard__check_modifier(uint16_t keycode);
-static bool keyboard__handle_modifier(uint16_t keycode, uint8_t keystate);
+static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate);
 static void keyboard__handle_media(uint16_t keycode, uint8_t keystate);
 
 
 
-static void keyboard__change_layout(uint16_t keycode) {
-
-    uint8_t new_layout;
-
-    switch(keycode) {
-        case KC_LAYOUT_INCREMENT:
-            if (current_layout == NUM_LAYOUTS - 1) {
-                current_layout = 0;    
-            }
-            else {
-                current_layout++;
-            }
-            break;
-        case KC_LAYOUT_DECREMENT:
-            if (current_layout == 0) {
-                current_layout = NUM_LAYOUTS - 1;    
-            }
-            else {
-                current_layout--;
-            }
-            break;
-        default:
-            new_layout = keycode - KC_MIN_LAYOUT;
-            if (new_layout >= NUM_LAYOUTS) {
-                ESP_LOGW(TAG, "New layout is out of bounds %d (max %d)", new_layout, NUM_LAYOUTS - 1);
-                current_layout = 0;
-            }
-            else {
-                current_layout = keycode - KC_MIN_LAYOUT;
-            }
-    }
-    ESP_LOGD(TAG, "Current layout changed %d", current_layout);
-}
-
-
 static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col) {
 
-    layout_t *layout;
-
-    if (layout_modifier == true) {
-        layout = &layout_modifier_keymap;
-    }
-    else if (shift_modifier == true) {
-        layout = shift_keymaps[current_layout];
-    }
-    else if (bluetooth_modifier == true) {
-        layout = &bluetooth_modifier_keymap;
-    }
-    else {
-        layout = keymaps[current_layout];
-    }
-
-    uint16_t keycode = (*layout)[row][col];
+    uint16_t keycode = keymaps[current_layer][row][col];
 
     return keycode;
 }
@@ -119,58 +63,57 @@ static uint16_t keyboard__check_modifier(uint16_t keycode) {
 }
 
 
-static bool keyboard__handle_modifier(uint16_t keycode, uint8_t keystate) {
+static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
 
-    bool modifier_changed = false;
+    bool action_performed = false;
+    event_t event;
 
-    if (keycode >= KC_BASE_MODIFIERS && keycode <= KC_MAX_MODIFIERS) {
-        modifier_changed = true;
+    if (keycode > QK_ACTION) {
+        action_performed = true;
 
         switch (keycode) {
-            case KC_LAYOUT:
-                if (keystate == KEY_UP) {
-                    layout_modifier = true;
+            case QK_TO ... QK_TO_MAX:
+                if (keystate == KEY_DOWN) {
+                    current_layer = keycode & 0xFF;
+                    ESP_LOGD(TAG, "Goto layer %d", current_layer);
                 }
-                else {
-                    layout_modifier = false;
-                }
-                ESP_LOGD(TAG, "layout modifier %d", layout_modifier);
                 break;
-            case KC_SHIFT:
-                if (keystate == KEY_UP) {
-                    shift_modifier = true;
+            case QK_MOMENTARY ... QK_MOMENTARY_MAX:
+                if (keystate == KEY_DOWN) {
+                    prev_layer = current_layer;
+                    current_layer = keycode & 0xFF;
+                    ESP_LOGD(TAG, "Momentary to layer %d", current_layer);
                 }
-                else {
-                    shift_modifier = false;
+                else { // KEY_UP
+                    current_layer = prev_layer;
+                    ESP_LOGD(TAG, "Momentary back to layer %d", current_layer);
                 }
-                ESP_LOGD(TAG, "shift modifier %d", shift_modifier);
                 break;
-            case KC_BLUETOOTH:
-                if (keystate == KEY_UP) {
-                    bluetooth_modifier = true;
-                }
-                else {
-                    bluetooth_modifier = false;
-                }
-                ESP_LOGD(TAG, "bluetooth modifier %d", bluetooth_modifier);
+            case QK_BT_HOST ... QK_BT_HOST_MAX:
+                event.type = EVENT_BT_CHANGE_HOST,
+                event.data = keycode & 0xFF,
+                xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                ESP_LOGD(TAG, "EVENT_BT_CHANGE_HOST %d", keycode & 0xFF);
                 break;
-            case KC_BT_DEVICE_RESET:
-                if (keystate == KEY_UP) {
-                    bluetooth_reset_modifier = true;
-                }
-                else {
-                    bluetooth_reset_modifier = false;
-                }
-                ESP_LOGD(TAG, "bluetooth reset modifier %d", bluetooth_reset_modifier);
+            case QK_BT_HOST_RESET ... QK_BT_HOST_RESET_MAX:
+                event.type = EVENT_BT_RESET_HOST,
+                event.data = keycode & 0xFF,
+                xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
                 break;
+            case QK_BRIGHTNESS ... QK_BRIGHTNESS_MAX:
+                if (keystate == KEY_DOWN) {
+                    event.type = EVENT_LEDS_BRIGHTNESS;
+                    event.data = keycode - QK_BRIGHTNESS; // 0 is up, 1 is down
+                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                    ESP_LOGD(TAG, "EVENT_LEDS_BRIGHTNESS %d", keycode - QK_BRIGHTNESS);
+                }
             default:
-                // ESP_LOGW(TAG, "Unrecognised modifier 0x%x", keycode);
-                modifier_changed = false;
                 break;
         }
     }
 
-    return modifier_changed;
+    return action_performed;
 
 }
 
@@ -215,41 +158,16 @@ uint8_t *keyboard__check_state() {
 
             // ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
 
-            if (keyboard__handle_modifier(keycode, keystate) == true) {
+            if (keyboard__handle_action(keycode, keystate) == true) {
                 continue;
             }
 
-            if (keystate == KEY_UP) {
-                // layouts
-                if (layout_modifier == true && keycode > KC_BASE_MODIFIERS && keycode <= KC_MAX_LAYOUT) {
-                    keyboard__change_layout(keycode);
-                    continue;
-                }
-
-                // bluetooth
-                if (keycode >= KC_MIN_BLUETOOTH && keycode <= KC_MAX_BLUETOOTH) {
-                    uint8_t bt_host = keycode - KC_MIN_BLUETOOTH;
-                    if (bluetooth_reset_modifier == true) {
-                        event_t event = {
-                            .type = EVENT_BT_RESET_DEVICE,
-                            .data = bt_host,
-                        };
-                        xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                    }
-                    else if (bluetooth_modifier == true) {
-                        event_t event = {
-                            .type = EVENT_BT_CHANGE_DEVICE,
-                            .data = bt_host,
-                        };
-                        xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                    }
-                    continue;
-                }
+            if (keystate == KEY_DOWN) {
 
                 // macros
-                if (keycode >= KC_BASE_MACRO && keycode <= KC_MAX_MACRO) {
+                if (keycode >= QK_MACRO && keycode <= QK_MACRO_MAX) {
                     uint16_t key;
-                    uint8_t macro_id = keycode - KC_BASE_MACRO;
+                    uint8_t macro_id = keycode & 0xFF;
 
                     if (report_index < HID_REPORT_LEN - MACRO_LEN) {
 
@@ -284,15 +202,6 @@ uint8_t *keyboard__check_state() {
                     continue;
                 }
 
-                // leds controls
-                if (keycode >= KC_BASE_LEDS && keycode <= KC_MAX_LEDS) {
-                    event_t event = {
-                        .type = EVENT_LEDS_BRIGHTNESS,
-                        .data = keycode - KC_BASE_LEDS,
-                    };
-                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                }
-
                 // normal key report
                 if (keycode <= 0xFF && report_index < HID_REPORT_LEN) {
 
@@ -308,14 +217,14 @@ uint8_t *keyboard__check_state() {
                 }
 
             }
-            else { // KEY_DOWN
+            else { // KEY_UP
 
                 report_index = hid_report_key_index[row][col];
 
                 // macros
-                if (keycode >= KC_BASE_MACRO && keycode <= KC_MAX_MACRO) {
+                if (keycode >= QK_MACRO && keycode <= QK_MACRO_MAX) {
                     uint16_t key;
-                    uint8_t macro_id = keycode - KC_BASE_MACRO;
+                    uint8_t macro_id = keycode & 0xFF;
 
                     for (uint8_t i = 0; i < MACRO_LEN; i++) {
                         key = macros[macro_id][i];

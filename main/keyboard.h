@@ -2,8 +2,8 @@
 #define KEYBOARD_H
 
 
-#define KEY_UP     (1)
-#define KEY_DOWN   (0)
+#define KEY_UP     (0)
+#define KEY_DOWN   (1)
 
 
 void     keyboard__init();

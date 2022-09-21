@@ -126,6 +126,10 @@
 #define KC_RCMD KC_RGUI
 #define KC_RWIN KC_RGUI
 
+/* For Internal Use */
+#define KC_BRIU QK_BRIGHTNESS_UP
+#define KC_BRID QK_BRIGHTNESS_DOWN
+
 /* Misc key aliases*/
 #define KC_NONE KC_UNDEFINED
 
@@ -298,7 +302,12 @@ enum hid_keyboard_keypad_usage {
     KC_EXSEL, /* 0xA4 */
 
 #if 0
-    /* NOTE: Following codes(0xB0-DD) are not used. Leave them for reference. */
+    // ***************************************************************
+    // These keycodes are present in the HID spec, but are           *
+    // nonfunctional on modern OSes. QMK uses this range (0xA5-0xDF) *
+    // for the media and function keys instead - see below.          *
+    // ***************************************************************
+
     KC_KP_00 = 0xB0,
     KC_KP_000,
     KC_THOUSANDS_SEPARATOR,
@@ -436,74 +445,52 @@ enum hid_consumer_control_keycodes {
 
 
 /* Special keycodes */
-/* NOTE: these are all in the 0x200 range */
 enum internal_special_keycodes {
-    /* Fn key */
-    KC_FN0 = 0x2C0,
-    KC_FN1,
-    KC_FN2,
-    KC_FN3,
-    KC_FN4,
-    KC_FN5,
-    KC_FN6,
-    KC_FN7,
-    KC_FN8,
-    KC_FN9,
-    KC_FN10,
-    KC_FN11,
-    KC_FN12,
-    KC_FN13,
-    KC_FN14,
-    KC_FN15,
+    // Ranges used - not to be used directly
+    QK_MACRO             = 0x1000,    
+    QK_MACRO_MAX         = 0x10FF,
 
-    /* Internal Modifiers */
-    KC_LAYOUT = 0x200,
-    KC_LAYOUT_INCREMENT,
-    KC_LAYOUT_DECREMENT,
-    KC_LAYOUT_0,
-    KC_LAYOUT_1,
-    KC_LAYOUT_2,
-    KC_LAYOUT_3,
-    KC_LAYOUT_4,
-    KC_LAYOUT_5,
-    KC_LAYOUT_6,
-    KC_LAYOUT_7,
-    KC_LAYOUT_8, /* 0x10B */
+    QK_TO                = 0x5000,
+    QK_TO_MAX            = 0x50FF,
+    QK_MOMENTARY         = 0x5100,
+    QK_MOMENTARY_MAX     = 0x51FF,
 
-    KC_SHIFT,
+    QK_BT_HOST           = 0x6000,
+    QK_BT_HOST_MAX       = 0x60FF,
+    QK_BT_HOST_RESET     = 0x6100,
+    QK_BT_HOST_RESET_MAX = 0x61FF,
 
-    KC_BLUETOOTH = 0x210,
-    KC_BT_DEVICE_RESET,
-    KC_BT_DEVICE_0,
-    KC_BT_DEVICE_1,
-    KC_BT_DEVICE_2,
+    QK_BRIGHTNESS        = 0x7000,
+    QK_BRIGHTNESS_MAX    = 0x70FF,
 
-    /* Macros */    
-    KC_MACRO_0 = 0x220, 
-    KC_MACRO_1,
-    KC_MACRO_2,
-    KC_MACRO_3,
-    KC_MACRO_4,
-    KC_MACRO_5,
-    KC_MACRO_6,
-    KC_MACRO_7,
-    KC_MACRO_8,
-    KC_MACRO_9,
 
-    /* Leds control */
-    KC_LEDS_INCREASE = 0x230,
-    KC_LEDS_DECREASE,
+    // Definitions - can be used directly
+    QK_BRIGHTNESS_UP     = 0x7000,
+    QK_BRIGHTNESS_DOWN,
+
+
 };
 
-#define KC_BASE_MODIFIERS  KC_LAYOUT
-#define KC_MAX_MODIFIERS   KC_BT_DEVICE_2
-#define KC_MIN_LAYOUT      KC_LAYOUT_0
-#define KC_MAX_LAYOUT      KC_LAYOUT_8
-#define KC_MIN_BLUETOOTH   KC_BT_DEVICE_0
-#define KC_MAX_BLUETOOTH   KC_BT_DEVICE_2
-#define KC_BASE_MACRO      KC_MACRO_0
-#define KC_MAX_MACRO       KC_MACRO_9
-#define KC_BASE_LEDS       KC_LEDS_INCREASE
-#define KC_MAX_LEDS        KC_LEDS_DECREASE
+
+// All keycodes corresponding to actions to be performed internally
+#define QK_ACTION      (0x2000)
+
+// Macro - 256 macros max
+#define MACRO(macro) (QK_MACRO | ((macro) & 0xFF))
+#define M MACRO
+#define MA MACRO
+
+
+// GOTO layer - 256 layer max
+#define TO(layer) (QK_TO | ((layer) & 0xFF))
+
+// Momentary switch layer - 256 layer max
+#define MO(layer) (QK_MOMENTARY | ((layer) & 0xFF))
+
+// Change to BT HOST - 256 hosts max
+#define BT(host)   (QK_BT_HOST | ((host) & 0xFF))
+
+// Reset BT Host config - 256 hosts max
+#define BT_RESET(host)   (QK_BT_HOST_RESET | ((host) & 0xFF))
 
 #endif
