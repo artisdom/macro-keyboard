@@ -161,7 +161,7 @@ void deep_sleep_task(void *pvParameters) {
             if (DEEP_SLEEP == true) {
                 ESP_LOGW(TAG, "Deep sleep triggered");
 
-                // wake up esp32 using rtc gpio
+                // deinits
                 if (BLE_ENABLED && (mode == TOGGLE_BLE) && (ble_deinit() != ESP_OK)) {
                     ESP_LOGE(TAG, "Unable to go to sleep!");
                     DEEP_SLEEP = false;
@@ -172,6 +172,8 @@ void deep_sleep_task(void *pvParameters) {
                     DEEP_SLEEP = false;
                     continue;                    
                 }
+
+                // wake up esp32 using rtc gpio
                 matrix__rtc_setup();
                 esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
                 ESP_LOGW(TAG, "Going to sleep................!");
@@ -294,7 +296,7 @@ void event_handler_task(void *parameters) {
 static void logging_init() {
 
     if (USB_ENABLED) {
-        // change UART default pins
+        // change UART default pins to reroute logs from USB pins
         uart_config_t uart_config = {
             .baud_rate = 115200,
             .data_bits = UART_DATA_8_BITS,
@@ -331,7 +333,7 @@ static void logging_init() {
 
 void app_main(void) {
 
-    matrix__rtc_deinit(); // first to disable interrupts
+    matrix__rtc_deinit(); // run first to disable interrupts
 
     logging_init();
     ESP_LOGI(TAG, "Hello");

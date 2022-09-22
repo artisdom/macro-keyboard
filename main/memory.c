@@ -108,6 +108,25 @@ static uint32_t increment_counter(nvs_handle_t handle, char *key) {
 }
 
 
+// Layers
+void memory__set_current_layer(uint8_t layer) {
+    esp_err_t err;
+
+    ESP_LOGD(TAG, "Setting current layer: %d", layer);
+    err = nvs_set_u8(keyboard_handle, "current_layer", layer);
+    ESP_ERROR_CHECK(err);
+}
+
+
+uint8_t memory__get_current_layer() {
+    uint8_t layer = 0;
+
+    mem_get_u8(keyboard_handle, "current_layer", &layer);
+
+    return layer;
+}
+
+
 // Bluetooth hosts
 void memory__set_bluetooth_host(uint8_t host_id, bt_host_t host) {
     esp_err_t err;

@@ -13,6 +13,7 @@
 #include "config.h"
 #include "matrix.h"
 #include "events.h"
+#include "memory.h"
 
 
 /* --------- Local Variables --------- */
@@ -54,8 +55,8 @@ static uint16_t keyboard__check_modifier(uint16_t keycode) {
 
     uint8_t cur_mod = 0;
     // these are the modifier keys
-    if ((KC_LCTRL <= keycode) && (keycode <= KC_RGUI)) {
-        cur_mod = (1 << (keycode - KC_LCTRL));
+    if ((KC_LEFT_CTRL <= keycode) && (keycode <= KC_RIGHT_GUI)) {
+        cur_mod = (1 << (keycode - KC_LEFT_CTRL));
         return cur_mod;
     }
     return 0;
@@ -66,6 +67,7 @@ static uint16_t keyboard__check_modifier(uint16_t keycode) {
 static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
 
     bool action_performed = false;
+    bool layer_changed = false;
     event_t event;
 
     if (keycode > QK_ACTION) {
@@ -76,6 +78,7 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
                 if (keystate == KEY_DOWN) {
                     current_layer = keycode & 0xFF;
                     ESP_LOGD(TAG, "Goto layer %d", current_layer);
+                    layer_changed = true;
                 }
                 break;
             case QK_MOMENTARY ... QK_MOMENTARY_MAX:
@@ -83,10 +86,12 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
                     prev_layer = current_layer;
                     current_layer = keycode & 0xFF;
                     ESP_LOGD(TAG, "Momentary to layer %d", current_layer);
+                    layer_changed = true;
                 }
                 else { // KEY_UP
                     current_layer = prev_layer;
                     ESP_LOGD(TAG, "Momentary back to layer %d", current_layer);
+                    layer_changed = true;
                 }
                 break;
             case QK_BT_HOST ... QK_BT_HOST_MAX:
@@ -113,6 +118,10 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
         }
     }
 
+    if (layer_changed) {
+        memory__set_current_layer(current_layer);
+    }
+
     return action_performed;
 
 }
@@ -126,11 +135,14 @@ static void keyboard__handle_media(uint16_t keycode, uint8_t keystate) {
 
     xQueueSend(media_q, (void*) &media_state, (TickType_t) 0);
 
-
 }
 
+
 void keyboard__init() {
-    // current_layout = 1;
+    ESP_LOGI(TAG, "Init NVS");
+    
+    current_layer = memory__get_current_layer();
+    ESP_LOGD(TAG, "Setting layer from nvs to %d", current_layer);
 }
 
 

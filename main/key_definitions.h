@@ -1,56 +1,72 @@
 #ifndef KEY_DEFINITIONS_H
 #define KEY_DEFINITIONS_H
 
-// taken from MK32 which itself lifted from TMK and QMK
+// taken QMK which itself comes from TMK
 
-#define KC_LCTL KC_LCTRL
-#define KC_RCTL KC_RCTRL
-#define KC_LSFT KC_LSHIFT
-#define KC_RSFT KC_RSHIFT
-#define KC_ESC  KC_ESCAPE
-#define KC_BSPC KC_BSPACE
+/*
+ * Short names for ease of definition of keymap
+ */
+/* Transparent */
+#define KC_TRANSPARENT 0x01
+#define KC_TRNS KC_TRANSPARENT
+
+/* Punctuation */
 #define KC_ENT  KC_ENTER
-#define KC_DEL  KC_DELETE
-#define KC_INS  KC_INSERT
-#define KC_CAPS KC_CAPSLOCK
-#define KC_CLCK KC_CAPSLOCK
-#define KC_RGHT KC_RIGHT
-#define KC_PGDN KC_PGDOWN
-#define KC_PSCR KC_PSCREEN
-#define KC_SLCK KC_SCROLLLOCK
-#define KC_PAUS KC_PAUSE
-#define KC_BRK  KC_PAUSE
-#define KC_NLCK KC_NUMLOCK
+#define KC_ESC  KC_ESCAPE
+#define KC_BSPC KC_BACKSPACE
 #define KC_SPC  KC_SPACE
 #define KC_MINS KC_MINUS
 #define KC_EQL  KC_EQUAL
-#define KC_GRV  KC_GRAVE
-#define KC_RBRC KC_RBRACKET
-#define KC_LBRC KC_LBRACKET
-#define KC_COMM KC_COMMA
-#define KC_BSLS KC_BSLASH
-#define KC_SLSH KC_SLASH
-#define KC_SCLN KC_SCOLON
-#define KC_QUOT KC_QUOTE
-#define KC_APP  KC_APPLICATION
+#define KC_LBRC KC_LEFT_BRACKET
+#define KC_RBRC KC_RIGHT_BRACKET
+#define KC_BSLS KC_BACKSLASH
 #define KC_NUHS KC_NONUS_HASH
-#define KC_NUBS KC_NONUS_BSLASH
-#define KC_LCAP KC_LOCKING_CAPS
-#define KC_LNUM KC_LOCKING_NUM
-#define KC_LSCR KC_LOCKING_SCROLL
-#define KC_ERAS KC_ALT_ERASE
+#define KC_SCLN KC_SEMICOLON
+#define KC_QUOT KC_QUOTE
+#define KC_GRV  KC_GRAVE
+#define KC_COMM KC_COMMA
+#define KC_SLSH KC_SLASH
+#define KC_NUBS KC_NONUS_BACKSLASH
+
+/* Lock Keys */
+#define KC_CAPS KC_CAPS_LOCK
+#define KC_SCRL KC_SCROLL_LOCK
+#define KC_NUM  KC_NUM_LOCK
+#define KC_LCAP KC_LOCKING_CAPS_LOCK
+#define KC_LNUM KC_LOCKING_NUM_LOCK
+#define KC_LSCR KC_LOCKING_SCROLL_LOCK
+
+/* Commands */
+#define KC_PSCR KC_PRINT_SCREEN
+#define KC_PAUS KC_PAUSE
+#define KC_BRK  KC_PAUSE
+#define KC_INS  KC_INSERT
+#define KC_PGUP KC_PAGE_UP
+#define KC_DEL  KC_DELETE
+#define KC_PGDN KC_PAGE_DOWN
+#define KC_RGHT KC_RIGHT
+#define KC_APP  KC_APPLICATION
+#define KC_EXEC KC_EXECUTE
+#define KC_SLCT KC_SELECT
+#define KC_AGIN KC_AGAIN
+#define KC_PSTE KC_PASTE
+#define KC_ERAS KC_ALTERNATE_ERASE
+#define KC_SYRQ KC_SYSTEM_REQUEST
+#define KC_CNCL KC_CANCEL
 #define KC_CLR  KC_CLEAR
-/* Japanese specific */
-#define KC_ZKHK KC_GRAVE
-#define KC_RO   KC_INT1
-#define KC_KANA KC_INT2
-#define KC_JYEN KC_INT3
-#define KC_HENK KC_INT4
-#define KC_MHEN KC_INT5
-/* Korean specific */
-#define KC_HAEN KC_LANG1
-#define KC_HANJ KC_LANG2
+#define KC_PRIR KC_PRIOR
+#define KC_RETN KC_RETURN
+#define KC_SEPR KC_SEPARATOR
+#define KC_CLAG KC_CLEAR_AGAIN
+#define KC_CRSL KC_CRSEL
+#define KC_EXSL KC_EXSEL
+
 /* Keypad */
+#define KC_PSLS KC_KP_SLASH
+#define KC_PAST KC_KP_ASTERISK
+#define KC_PMNS KC_KP_MINUS
+#define KC_PPLS KC_KP_PLUS
+#define KC_PENT KC_KP_ENTER
 #define KC_P1   KC_KP_1
 #define KC_P2   KC_KP_2
 #define KC_P3   KC_KP_3
@@ -62,52 +78,61 @@
 #define KC_P9   KC_KP_9
 #define KC_P0   KC_KP_0
 #define KC_PDOT KC_KP_DOT
-#define KC_PCMM KC_KP_COMMA
-#define KC_PSLS KC_KP_SLASH
-#define KC_PAST KC_KP_ASTERISK
-#define KC_PMNS KC_KP_MINUS
-#define KC_PPLS KC_KP_PLUS
 #define KC_PEQL KC_KP_EQUAL
-#define KC_PENT KC_KP_ENTER
-/* Unix function key */
-#define KC_EXEC KC_EXECUTE
-#define KC_SLCT KC_SELECT
-#define KC_AGIN KC_AGAIN
-#define KC_PSTE KC_PASTE
-/* Mousekey */
-#define KC_MS_U KC_MS_UP
-#define KC_MS_D KC_MS_DOWN
-#define KC_MS_L KC_MS_LEFT
-#define KC_MS_R KC_MS_RIGHT
-#define KC_BTN1 KC_MS_BTN1
-#define KC_BTN2 KC_MS_BTN2
-#define KC_BTN3 KC_MS_BTN3
-#define KC_BTN4 KC_MS_BTN4
-#define KC_BTN5 KC_MS_BTN5
-#define KC_WH_U KC_MS_WH_UP
-#define KC_WH_D KC_MS_WH_DOWN
-#define KC_WH_L KC_MS_WH_LEFT
-#define KC_WH_R KC_MS_WH_RIGHT
-#define KC_ACL0 KC_MS_ACCEL0
-#define KC_ACL1 KC_MS_ACCEL1
-#define KC_ACL2 KC_MS_ACCEL2
-/* System Control */
+#define KC_PCMM KC_KP_COMMA
+
+/* Language Specific */
+#define KC_INT1 KC_INTERNATIONAL_1
+#define KC_INT2 KC_INTERNATIONAL_2
+#define KC_INT3 KC_INTERNATIONAL_3
+#define KC_INT4 KC_INTERNATIONAL_4
+#define KC_INT5 KC_INTERNATIONAL_5
+#define KC_INT6 KC_INTERNATIONAL_6
+#define KC_INT7 KC_INTERNATIONAL_7
+#define KC_INT8 KC_INTERNATIONAL_8
+#define KC_INT9 KC_INTERNATIONAL_9
+#define KC_LNG1 KC_LANGUAGE_1
+#define KC_LNG2 KC_LANGUAGE_2
+#define KC_LNG3 KC_LANGUAGE_3
+#define KC_LNG4 KC_LANGUAGE_4
+#define KC_LNG5 KC_LANGUAGE_5
+#define KC_LNG6 KC_LANGUAGE_6
+#define KC_LNG7 KC_LANGUAGE_7
+#define KC_LNG8 KC_LANGUAGE_8
+#define KC_LNG9 KC_LANGUAGE_9
+
+/* Modifiers */
+#define KC_LCTL KC_LEFT_CTRL
+#define KC_LSFT KC_LEFT_SHIFT
+#define KC_LALT KC_LEFT_ALT
+#define KC_LOPT KC_LEFT_ALT
+#define KC_LGUI KC_LEFT_GUI
+#define KC_LCMD KC_LEFT_GUI
+#define KC_LWIN KC_LEFT_GUI
+#define KC_RCTL KC_RIGHT_CTRL
+#define KC_RSFT KC_RIGHT_SHIFT
+#define KC_RALT KC_RIGHT_ALT
+#define KC_ALGR KC_RIGHT_ALT
+#define KC_ROPT KC_RIGHT_ALT
+#define KC_RGUI KC_RIGHT_GUI
+#define KC_RCMD KC_RIGHT_GUI
+#define KC_RWIN KC_RIGHT_GUI
+
+/* Generic Desktop Page (0x01) */
 #define KC_PWR  KC_SYSTEM_POWER
 #define KC_SLEP KC_SYSTEM_SLEEP
 #define KC_WAKE KC_SYSTEM_WAKE
-/* Consumer Page */
+
+/* Consumer Page (0x0C) */
 #define KC_MUTE KC_AUDIO_MUTE
 #define KC_VOLU KC_AUDIO_VOL_UP
 #define KC_VOLD KC_AUDIO_VOL_DOWN
 #define KC_MNXT KC_MEDIA_NEXT_TRACK
 #define KC_MPRV KC_MEDIA_PREV_TRACK
-#define KC_MFFD KC_MEDIA_FAST_FORWARD
-#define KC_MRWD KC_MEDIA_REWIND
 #define KC_MSTP KC_MEDIA_STOP
 #define KC_MPLY KC_MEDIA_PLAY_PAUSE
 #define KC_MSEL KC_MEDIA_SELECT
 #define KC_EJCT KC_MEDIA_EJECT
-#define KC_MAIL KC_MAIL
 #define KC_CALC KC_CALCULATOR
 #define KC_MYCM KC_MY_COMPUTER
 #define KC_WSCH KC_WWW_SEARCH
@@ -117,21 +142,39 @@
 #define KC_WSTP KC_WWW_STOP
 #define KC_WREF KC_WWW_REFRESH
 #define KC_WFAV KC_WWW_FAVORITES
-/* Transparent */
-#define KC_TRANSPARENT  1
-#define KC_TRNS KC_TRANSPARENT
-/* GUI key aliases */
-#define KC_LCMD KC_LGUI
-#define KC_LWIN KC_LGUI
-#define KC_RCMD KC_RGUI
-#define KC_RWIN KC_RGUI
+#define KC_MFFD KC_MEDIA_FAST_FORWARD
+#define KC_MRWD KC_MEDIA_REWIND
+#define KC_BRIU KC_BRIGHTNESS_UP
+#define KC_BRID KC_BRIGHTNESS_DOWN
 
-/* For Internal Use */
-#define KC_BRIU QK_BRIGHTNESS_UP
-#define KC_BRID QK_BRIGHTNESS_DOWN
+/* System Specific */
+#define KC_BRMU KC_PAUSE
+#define KC_BRMD KC_SCROLL_LOCK
+
+/* Mouse Keys */
+#define KC_MS_U KC_MS_UP
+#define KC_MS_D KC_MS_DOWN
+#define KC_MS_L KC_MS_LEFT
+#define KC_MS_R KC_MS_RIGHT
+#define KC_BTN1 KC_MS_BTN1
+#define KC_BTN2 KC_MS_BTN2
+#define KC_BTN3 KC_MS_BTN3
+#define KC_BTN4 KC_MS_BTN4
+#define KC_BTN5 KC_MS_BTN5
+#define KC_BTN6 KC_MS_BTN6
+#define KC_BTN7 KC_MS_BTN7
+#define KC_BTN8 KC_MS_BTN8
+#define KC_WH_U KC_MS_WH_UP
+#define KC_WH_D KC_MS_WH_DOWN
+#define KC_WH_L KC_MS_WH_LEFT
+#define KC_WH_R KC_MS_WH_RIGHT
+#define KC_ACL0 KC_MS_ACCEL0
+#define KC_ACL1 KC_MS_ACCEL1
+#define KC_ACL2 KC_MS_ACCEL2
 
 /* Misc key aliases*/
 #define KC_NONE KC_UNDEFINED
+
 
 // USB HID Keyboard/Keypad Usage(0x07)
 enum hid_keyboard_keypad_usage {
@@ -151,7 +194,7 @@ enum hid_keyboard_keypad_usage {
     KC_J,
     KC_K,
     KC_L,
-    KC_M, /* 0x10 */
+    KC_M, // 0x10
     KC_N,
     KC_O,
     KC_P,
@@ -167,7 +210,7 @@ enum hid_keyboard_keypad_usage {
     KC_Z,
     KC_1,
     KC_2,
-    KC_3, /* 0x20 */
+    KC_3, // 0x20
     KC_4,
     KC_5,
     KC_6,
@@ -177,48 +220,48 @@ enum hid_keyboard_keypad_usage {
     KC_0,
     KC_ENTER,
     KC_ESCAPE,
-    KC_BSPACE,
+    KC_BACKSPACE,
     KC_TAB,
     KC_SPACE,
     KC_MINUS,
     KC_EQUAL,
-    KC_LBRACKET,
-    KC_RBRACKET, /* 0x30 */
-    KC_BSLASH, /* \ (and |) */
-    KC_NONUS_HASH, /* Non-US # and ~ (Typically near the Enter key) */
-    KC_SCOLON, /* ; (and :) */
-    KC_QUOTE, /* ' and " */
-    KC_GRAVE, /* Grave accent and tilde */
-    KC_COMMA, /* , and < */
-    KC_DOT, /* . and > */
-    KC_SLASH, /* / and ? */
-    KC_CAPSLOCK,
+    KC_LEFT_BRACKET,
+    KC_RIGHT_BRACKET, // 0x30
+    KC_BACKSLASH,
+    KC_NONUS_HASH,
+    KC_SEMICOLON,
+    KC_QUOTE,
+    KC_GRAVE,
+    KC_COMMA,
+    KC_DOT,
+    KC_SLASH,
+    KC_CAPS_LOCK,
     KC_F1,
     KC_F2,
     KC_F3,
     KC_F4,
     KC_F5,
     KC_F6,
-    KC_F7, /* 0x40 */
+    KC_F7, // 0x40
     KC_F8,
     KC_F9,
     KC_F10,
     KC_F11,
     KC_F12,
-    KC_PSCREEN,
-    KC_SCROLLLOCK,
+    KC_PRINT_SCREEN,
+    KC_SCROLL_LOCK,
     KC_PAUSE,
     KC_INSERT,
     KC_HOME,
-    KC_PGUP,
+    KC_PAGE_UP,
     KC_DELETE,
     KC_END,
-    KC_PGDOWN,
+    KC_PAGE_DOWN,
     KC_RIGHT,
-    KC_LEFT, /* 0x50 */
+    KC_LEFT, // 0x50
     KC_DOWN,
     KC_UP,
-    KC_NUMLOCK,
+    KC_NUM_LOCK,
     KC_KP_SLASH,
     KC_KP_ASTERISK,
     KC_KP_MINUS,
@@ -231,13 +274,13 @@ enum hid_keyboard_keypad_usage {
     KC_KP_5,
     KC_KP_6,
     KC_KP_7,
-    KC_KP_8, /* 0x60 */
+    KC_KP_8, // 0x60
     KC_KP_9,
     KC_KP_0,
     KC_KP_DOT,
-    KC_NONUS_BSLASH, /* Non-US \ and | (Typically near the Left-Shift key) */
+    KC_NONUS_BACKSLASH,
     KC_APPLICATION,
-    KC_POWER,
+    KC_KB_POWER,
     KC_KP_EQUAL,
     KC_F13,
     KC_F14,
@@ -247,7 +290,7 @@ enum hid_keyboard_keypad_usage {
     KC_F18,
     KC_F19,
     KC_F20,
-    KC_F21, /* 0x70 */
+    KC_F21, // 0x70
     KC_F22,
     KC_F23,
     KC_F24,
@@ -262,109 +305,114 @@ enum hid_keyboard_keypad_usage {
     KC_COPY,
     KC_PASTE,
     KC_FIND,
-    KC__MUTE,
-    KC__VOLUP, /* 0x80 */
-    KC__VOLDOWN,
-    KC_LOCKING_CAPS, /* locking Caps Lock */
-    KC_LOCKING_NUM, /* locking Num Lock */
-    KC_LOCKING_SCROLL, /* locking Scroll Lock */
+    KC_KB_MUTE,
+    KC_KB_VOLUME_UP, // 0x80
+    KC_KB_VOLUME_DOWN,
+    KC_LOCKING_CAPS_LOCK,
+    KC_LOCKING_NUM_LOCK,
+    KC_LOCKING_SCROLL_LOCK,
     KC_KP_COMMA,
-    KC_KP_EQUAL_AS400, /* equal sign on AS/400 */
-    KC_INT1,
-    KC_INT2,
-    KC_INT3,
-    KC_INT4,
-    KC_INT5,
-    KC_INT6,
-    KC_INT7,
-    KC_INT8,
-    KC_INT9,
-    KC_LANG1, /* 0x90 */
-    KC_LANG2,
-    KC_LANG3,
-    KC_LANG4,
-    KC_LANG5,
-    KC_LANG6,
-    KC_LANG7,
-    KC_LANG8,
-    KC_LANG9,
-    KC_ALT_ERASE,
-    KC_SYSREQ,
+    KC_KP_EQUAL_AS400,
+    KC_INTERNATIONAL_1,
+    KC_INTERNATIONAL_2,
+    KC_INTERNATIONAL_3,
+    KC_INTERNATIONAL_4,
+    KC_INTERNATIONAL_5,
+    KC_INTERNATIONAL_6,
+    KC_INTERNATIONAL_7,
+    KC_INTERNATIONAL_8,
+    KC_INTERNATIONAL_9,
+    KC_LANGUAGE_1, // 0x90
+    KC_LANGUAGE_2,
+    KC_LANGUAGE_3,
+    KC_LANGUAGE_4,
+    KC_LANGUAGE_5,
+    KC_LANGUAGE_6,
+    KC_LANGUAGE_7,
+    KC_LANGUAGE_8,
+    KC_LANGUAGE_9,
+    KC_ALTERNATE_ERASE,
+    KC_SYSTEM_REQUEST,
     KC_CANCEL,
     KC_CLEAR,
     KC_PRIOR,
     KC_RETURN,
     KC_SEPARATOR,
-    KC_OUT, /* 0xA0 */
+    KC_OUT, // 0xA0
     KC_OPER,
     KC_CLEAR_AGAIN,
     KC_CRSEL,
-    KC_EXSEL, /* 0xA4 */
+    KC_EXSEL,
 
 #if 0
-    // ***************************************************************
-    // These keycodes are present in the HID spec, but are           *
-    // nonfunctional on modern OSes. QMK uses this range (0xA5-0xDF) *
-    // for the media and function keys instead - see below.          *
-    // ***************************************************************
+  // ***************************************************************
+  // These keycodes are present in the HID spec, but are           *
+  // nonfunctional on modern OSes. QMK uses this range (0xA5-0xDF) *
+  // for the media and function keys instead - see below.          *
+  // ***************************************************************
 
-    KC_KP_00 = 0xB0,
-    KC_KP_000,
-    KC_THOUSANDS_SEPARATOR,
-    KC_DECIMAL_SEPARATOR,
-    KC_CURRENCY_UNIT,
-    KC_CURRENCY_SUB_UNIT,
-    KC_KP_LPAREN,
-    KC_KP_RPAREN,
-    KC_KP_LCBRACKET, /* { */
-    KC_KP_RCBRACKET, /* } */
-    KC_KP_TAB,
-    KC_KP_BSPACE,
-    KC_KP_A,
-    KC_KP_B,
-    KC_KP_C,
-    KC_KP_D,
-    KC_KP_E, /* 0xC0 */
-    KC_KP_F,
-    KC_KP_XOR,
-    KC_KP_HAT,
-    KC_KP_PERC,
-    KC_KP_LT,
-    KC_KP_GT,
-    KC_KP_AND,
-    KC_KP_LAZYAND,
-    KC_KP_OR,
-    KC_KP_LAZYOR,
-    KC_KP_COLON,
-    KC_KP_HASH,
-    KC_KP_SPACE,
-    KC_KP_ATMARK,
-    KC_KP_EXCLAMATION,
-    KC_KP_MEM_STORE, /* 0xD0 */
-    KC_KP_MEM_RECALL,
-    KC_KP_MEM_CLEAR,
-    KC_KP_MEM_ADD,
-    KC_KP_MEM_SUB,
-    KC_KP_MEM_MUL,
-    KC_KP_MEM_DIV,
-    KC_KP_PLUS_MINUS,
-    KC_KP_CLEAR,
-    KC_KP_CLEAR_ENTRY,
-    KC_KP_BINARY,
-    KC_KP_OCTAL,
-    KC_KP_DECIMAL,
-    KC_KP_HEXADECIMAL, /* 0xDD */
+  KC_KP_00                = 0xB0,
+  KC_KP_000,
+  KC_THOUSANDS_SEPARATOR,
+  KC_DECIMAL_SEPARATOR,
+  KC_CURRENCY_UNIT,
+  KC_CURRENCY_SUB_UNIT,
+  KC_KP_LEFT_PARENTHESIS,
+  KC_KP_RIGHT_PARENTHESIS,
+  KC_KP_LEFT_BRACE,
+  KC_KP_RIGHT_BRACE,
+  KC_KP_TAB,
+  KC_KP_BACKSPACE,
+  KC_KP_A,
+  KC_KP_B,
+  KC_KP_C,
+  KC_KP_D,
+  KC_KP_E,                //0xC0
+  KC_KP_F,
+  KC_KP_XOR,
+  KC_KP_HAT,
+  KC_KP_PERCENT,
+  KC_KP_LESS_THAN,
+  KC_KP_GREATER_THAN,
+  KC_KP_AND,
+  KC_KP_LAZY_AND,
+  KC_KP_OR,
+  KC_KP_LAZY_OR,
+  KC_KP_COLON,
+  KC_KP_HASH,
+  KC_KP_SPACE,
+  KC_KP_AT,
+  KC_KP_EXCLAMATION,
+  KC_KP_MEM_STORE,        //0xD0
+  KC_KP_MEM_RECALL,
+  KC_KP_MEM_CLEAR,
+  KC_KP_MEM_ADD,
+  KC_KP_MEM_SUB,
+  KC_KP_MEM_MUL,
+  KC_KP_MEM_DIV,
+  KC_KP_PLUS_MINUS,
+  KC_KP_CLEAR,
+  KC_KP_CLEAR_ENTRY,
+  KC_KP_BINARY,
+  KC_KP_OCTAL,
+  KC_KP_DECIMAL,
+  KC_KP_HEXADECIMAL,
 #endif
 
     /* Modifiers */
-    KC_LCTRL = 0xE0,
-    KC_LSHIFT,
-    KC_LALT,
-    KC_LGUI,
-    KC_RCTRL,
-    KC_RSHIFT,
-    KC_RALT,
-    KC_RGUI,
+    KC_LEFT_CTRL = 0xE0,
+    KC_LEFT_SHIFT,
+    KC_LEFT_ALT,
+    KC_LEFT_GUI,
+    KC_RIGHT_CTRL,
+    KC_RIGHT_SHIFT,
+    KC_RIGHT_ALT,
+    KC_RIGHT_GUI
+
+    // **********************************************
+    // * 0xF0-0xFF are unallocated in the HID spec. *
+    // * QMK uses these for Mouse Keys - see below. *
+    // **********************************************
 };
 
 
@@ -394,6 +442,10 @@ enum hid_mouse_keycodes {
 /* NOTE: in order to not overlap with keyboard keycodes, all these keycodes are in the 0x100 range
 but & 0xFF will yield the spec keycode */
 #define KC_CC_OFFSET    (0x100)
+
+#define KC_BASE_MEDIA      KC_CC_POWER
+#define KC_MAX_MEDIA       KC_CC_VOL_DOWN
+
 enum hid_consumer_control_keycodes {
 
     KC_CC_POWER = 0x130,
@@ -440,13 +492,16 @@ enum hid_consumer_control_keycodes {
     KC_CC_VOL_DOWN,
 };
 
-#define KC_BASE_MEDIA      KC_CC_POWER
-#define KC_MAX_MEDIA       KC_CC_VOL_DOWN
-
 
 /* Special keycodes */
+// All keycodes corresponding to actions/shortcuts to be performed internally
+#define QK_ACTION      (0x2000)
+
+#define KC_LEDU QK_BRIGHTNESS_UP
+#define KC_LEDD QK_BRIGHTNESS_DOWN
+
 enum internal_special_keycodes {
-    // Ranges used - not to be used directly
+    // Ranges used in shortcuts - not to be used directly
     QK_MACRO             = 0x1000,    
     QK_MACRO_MAX         = 0x10FF,
 
@@ -472,9 +527,7 @@ enum internal_special_keycodes {
 };
 
 
-// All keycodes corresponding to actions to be performed internally
-#define QK_ACTION      (0x2000)
-
+/* C Macros to for keycode ranges */
 // Macro - 256 macros max
 #define MACRO(macro) (QK_MACRO | ((macro) & 0xFF))
 #define M   MACRO
