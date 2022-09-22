@@ -14,6 +14,7 @@
 #include "matrix.h"
 #include "events.h"
 #include "memory.h"
+#include "leds.h"
 
 
 /* --------- Local Variables --------- */
@@ -37,7 +38,7 @@ extern QueueHandle_t media_q;
 /* --------- Local Functions --------- */
 static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col);
 static uint16_t keyboard__check_modifier(uint16_t keycode);
-static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate);
+static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t position[2]);
 static void keyboard__handle_media(uint16_t keycode, uint8_t keystate);
 
 
@@ -64,7 +65,7 @@ static uint16_t keyboard__check_modifier(uint16_t keycode) {
 }
 
 
-static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
+static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t position[2]) {
 
     bool action_performed = false;
     bool layer_changed = false;
@@ -95,14 +96,16 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
                 }
                 break;
             case QK_BT_HOST ... QK_BT_HOST_MAX:
-                event.type = EVENT_BT_CHANGE_HOST,
-                event.data = keycode & 0xFF,
+                event.type = EVENT_BT_CHANGE_HOST;
+                event.data = keycode & 0xFF;
+                leds__update_effect_position(position);
                 xQueueSend(event_q, (void *) &event, (TickType_t) 0);
                 ESP_LOGD(TAG, "EVENT_BT_CHANGE_HOST %d", keycode & 0xFF);
                 break;
             case QK_BT_HOST_RESET ... QK_BT_HOST_RESET_MAX:
-                event.type = EVENT_BT_RESET_HOST,
-                event.data = keycode & 0xFF,
+                event.type = EVENT_BT_RESET_HOST;
+                event.data = keycode & 0xFF;
+                leds__update_effect_position(position);
                 xQueueSend(event_q, (void *) &event, (TickType_t) 0);
                 ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
                 break;
@@ -170,7 +173,8 @@ uint8_t *keyboard__check_state() {
 
             // ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
 
-            if (keyboard__handle_action(keycode, keystate) == true) {
+            uint8_t pos[2] = {row, col};
+            if (keyboard__handle_action(keycode, keystate, pos) == true) {
                 continue;
             }
 

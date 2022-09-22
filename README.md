@@ -7,8 +7,7 @@ Using esp-idf v5.0-beta1
 
 ## Features
 
-- Layout modifier: change the layout with a button or combination of buttons.
-- Shift modifier: hold the shift key to access a new layout.
+- Layouts: QMK style
 - Macros: fakes multiple key presses on a single key.
 - Deep sleep
 - Battery level reports
@@ -27,10 +26,9 @@ Using esp-idf v5.0-beta1
 	- Make keyboard compatible with VIA to change layouts and keymaps on the fly.
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level + adc calibration)
-- LED brightness scaling curve + more low light granularity.
 - Clean up HID descriptors to make them common between USB and BLE stacks.
 - Better USB deinit (waiting on TinyUSB implementation).
-- Toggle switch between BLE and USB (partially done).
+- Toggle switch between BLE and USB (partially done: need wakeup on switch change).
 - MIDI device?
 - Mutiple BLE hosts in parallel? + BLE 5 features?
 - If design is kept as BLE only, shift implementation to NimBLE stack (not Bluedroid).
