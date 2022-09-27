@@ -66,7 +66,7 @@ void keyboard_task(void *parameters) {
 
             memcpy(past_report, current_report, sizeof(past_report));
 
-            ESP_LOGD(TAG, "HID report:  %d,%d, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
+            ESP_LOGD(TAG, "HID report:  0x%x,0x%x,  0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
                 current_report[0], current_report[1], current_report[2], current_report[3],
                 current_report[4], current_report[5], current_report[6], current_report[7]);
 

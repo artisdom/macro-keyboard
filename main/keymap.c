@@ -45,14 +45,14 @@ enum layers {
 
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
-        TO(BT),           KC_A,     KC_B,     KC_C,
-        TO(LAYER_1),      KC_A,     KC_B,     KC_C,
-        TO(LAYER_0),      M(COPY),  M(PASTE), KC_C),
+        TO(BT),           KC_A,     KC_B,         KC_C,
+        TO(LAYER_1),    LSFT(KC_A), LSC(KC_DOWN), LAG(KC_DOWN),
+        TO(LAYER_0),      xxxxxxx,  RSC(KC_DOWN), xxxxxxx),
 
     [LAYER_1] = LAYOUT(
-        TO(BT),           KC_D,     KC_E,     KC_F,
+        TO(BT),           KC_AT,    KC_LPRN,  KC_RPRN,
         TO(LAYER_2),      KC_D,     KC_E,     KC_F,
-        TO(LAYER_0),      KC_D,     KC_E,     KC_F),
+        TO(LAYER_0),      M(COPY),  M(PASTE), KC_F),
 
     [LAYER_2] = LAYOUT(
         TO(BT),           KC_G,     KC_H,     KC_J,

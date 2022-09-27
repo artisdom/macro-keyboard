@@ -54,13 +54,22 @@ static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col) {
 // check for HID modifiers
 static uint16_t keyboard__check_modifier(uint16_t keycode) {
 
-    uint8_t cur_mod = 0;
-    // these are the modifier keys
-    if ((KC_LEFT_CTRL <= keycode) && (keycode <= KC_RIGHT_GUI)) {
-        cur_mod = (1 << (keycode - KC_LEFT_CTRL));
-        return cur_mod;
+    uint8_t modifier = 0;
+    // quantum modifier combinations
+    if ((keycode >= QK_MODS) && (keycode <= QK_MODS_MAX)) {
+        modifier = (keycode & 0x0F00) >> 8; // grab 4 bits
+        uint16_t right_mod = keycode & QK_RMODS_MIN;
+        if (right_mod) { // Right modifiers are the 4 MSB bits
+            modifier <<= 4;
+        }
     }
-    return 0;
+
+    // HID modifier keys
+    keycode = keycode & QK_BASIC_MAX;
+    if ((keycode >= KC_MODS) && (keycode <= KC_MODS_MAX)) {
+        modifier |= (1 << (keycode - KC_LEFT_CTRL));
+    }
+    return modifier;
 
 }
 
@@ -71,7 +80,7 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
     bool layer_changed = false;
     event_t event;
 
-    if (keycode > QK_ACTION) {
+    if (keycode >= QK_ACTION) {
         action_performed = true;
 
         switch (keycode) {
@@ -193,14 +202,13 @@ uint8_t *keyboard__check_state() {
                             key = macros[macro_id][i];
                             
                             uint8_t modifier = keyboard__check_modifier(key);
-                            if (modifier) {
-                                // ESP_LOGD(TAG, "Macro %d, modifier 0x%x", macro_id, modifier);
-                                hid_report[0] |= modifier;
-                            }
-                            else {
-                                // ESP_LOGD(TAG, "Macro %d, adding key %d at %d", macro_id, key, report_index);
-                                hid_report[report_index] = key;
-                                report_index++;
+                            hid_report[0] |= modifier;
+
+                            // ESP_LOGD(TAG, "Macro %d, adding key %d at %d", macro_id, key, report_index);
+                            uint8_t hid_keycode = key & QK_BASIC_MAX;
+                            if ((hid_keycode < KC_MODS) || (hid_keycode > KC_MODS_MAX)) {
+                                hid_report[report_index] = hid_keycode;
+                                hid_report_key_index[row][col] = report_index;
                                 hid_report_index++;
                             }
 
@@ -213,20 +221,20 @@ uint8_t *keyboard__check_state() {
                 }
 
                 // media controls
-                if (keycode >= KC_BASE_MEDIA && keycode <= KC_MAX_MEDIA) {
+                if (keycode >= KC_MEDIA && keycode <= KC_MEDIA_MAX) {
                     keyboard__handle_media(keycode, keystate);
                     continue;
                 }
 
                 // normal key report
-                if (keycode <= 0xFF && report_index < HID_REPORT_LEN) {
+                if (report_index < HID_REPORT_LEN) {
 
                     uint8_t modifier = keyboard__check_modifier(keycode);
-                    if (modifier) {
-                        hid_report[0] |= modifier;
-                    }
-                    else {
-                        hid_report[report_index] = keycode;
+                    hid_report[0] |= modifier;
+   
+                    uint8_t hid_keycode = keycode & QK_BASIC_MAX;
+                    if ((hid_keycode < KC_MODS) || (hid_keycode > KC_MODS_MAX)) {
+                        hid_report[report_index] = hid_keycode;
                         hid_report_key_index[row][col] = report_index;
                         hid_report_index++;
                     }
@@ -245,12 +253,10 @@ uint8_t *keyboard__check_state() {
                     for (uint8_t i = 0; i < MACRO_LEN; i++) {
                         key = macros[macro_id][i];
                         uint8_t modifier = keyboard__check_modifier(key);
-                        if (modifier) {
-                            // ESP_LOGD(TAG, "Macro %d, ~modifier 0x%x", macro_id, modifier);
-                            hid_report[0] &= ~modifier;
-                        }
-                        else {
-                            // ESP_LOGD(TAG, "Macro %d, removing key %d at %d", macro_id, key, report_index);
+                        hid_report[0] &= ~modifier;
+                        
+                        uint8_t hid_keycode = key & QK_BASIC_MAX;
+                        if ((hid_keycode < KC_MODS) || (hid_keycode > KC_MODS_MAX)) {
                             hid_report[report_index] = 0;
                             report_index++;
                             hid_report_index--;
@@ -261,16 +267,15 @@ uint8_t *keyboard__check_state() {
                 }
 
                 // media controls
-                if (keycode >= KC_BASE_MEDIA && keycode <= KC_MAX_MEDIA) {
+                if (keycode >= KC_MEDIA && keycode <= KC_MEDIA_MAX) {
                     keyboard__handle_media(keycode, keystate);
                     continue;
                 }
 
                 // normal key report
                 uint8_t modifier = keyboard__check_modifier(keycode);
-                if (modifier) {
-                    hid_report[0] &= ~modifier;
-                }
+                hid_report[0] &= ~modifier;
+
                 if (report_index >= 2) {
                     hid_report[report_index] = 0;
                     hid_report_key_index[row][col] = 0;
