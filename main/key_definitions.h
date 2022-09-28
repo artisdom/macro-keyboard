@@ -504,39 +504,47 @@ enum hid_consumer_control_keycodes {
 
 enum internal_special_keycodes {
     // Ranges used in shortcuts - not to be used directly
-    QK_BASIC             = 0x0000,
-    QK_BASIC_MAX         = 0x00FF,
-    QK_MODS              = 0x0100,
-    QK_LCTL              = 0x0100,
-    QK_LSFT              = 0x0200,
-    QK_LALT              = 0x0400,
-    QK_LGUI              = 0x0800,
-    QK_RMODS_MIN         = 0x1000,
-    QK_RCTL              = 0x1100,
-    QK_RSFT              = 0x1200,
-    QK_RALT              = 0x1400,
-    QK_RGUI              = 0x1800,
-    QK_MODS_MAX          = 0x1FFF,
+    QK_BASIC                = 0x0000,
+    QK_BASIC_MAX            = 0x00FF,
+    QK_MODS                 = 0x0100,
+    QK_LCTL                 = 0x0100,
+    QK_LSFT                 = 0x0200,
+    QK_LALT                 = 0x0400,
+    QK_LGUI                 = 0x0800,
+    QK_RMODS_MIN            = 0x1000,
+    QK_RCTL                 = 0x1100,
+    QK_RSFT                 = 0x1200,
+    QK_RALT                 = 0x1400,
+    QK_RGUI                 = 0x1800,
+    QK_MODS_MAX             = 0x1FFF,
 
-    QK_MACRO             = 0x2000,    
-    QK_MACRO_MAX         = 0x20FF,
+    QK_MACRO                = 0x2000,    
+    QK_MACRO_MAX            = 0x20FF,
 
-    QK_TO                = 0x5000,
-    QK_TO_MAX            = 0x50FF,
-    QK_MOMENTARY         = 0x5100,
-    QK_MOMENTARY_MAX     = 0x51FF,
+    QK_TO                   = 0x5000,
+    QK_TO_MAX               = 0x50FF,
+    QK_MOMENTARY            = 0x5100,
+    QK_MOMENTARY_MAX        = 0x51FF,
+    QK_DEF_LAYER            = 0x5200,
+    QK_DEF_LAYER_MAX        = 0x52FF,
+    QK_TOGGLE_LAYER         = 0x5300,
+    QK_TOGGLE_LAYER_MAX     = 0x53FF,
+    QK_ONE_SHOT_LAYER       = 0x5400,
+    QK_ONE_SHOT_LAYER_MAX   = 0x54FF,
+    QK_ONE_SHOT_MOD         = 0x5500,
+    QK_ONE_SHOT_MOD_MAX     = 0x55FF,
 
-    QK_BT_HOST           = 0x6000,
-    QK_BT_HOST_MAX       = 0x60FF,
-    QK_BT_HOST_RESET     = 0x6100,
-    QK_BT_HOST_RESET_MAX = 0x61FF,
+    QK_BT_HOST              = 0x6000,
+    QK_BT_HOST_MAX          = 0x60FF,
+    QK_BT_HOST_RESET        = 0x6100,
+    QK_BT_HOST_RESET_MAX    = 0x61FF,
 
-    QK_BRIGHTNESS        = 0x7000,
-    QK_BRIGHTNESS_MAX    = 0x70FF,
+    QK_BRIGHTNESS           = 0x7000,
+    QK_BRIGHTNESS_MAX       = 0x70FF,
 
 
     // Definitions - can be used directly
-    QK_BRIGHTNESS_UP     = 0x7000,
+    QK_BRIGHTNESS_UP        = 0x7000,
     QK_BRIGHTNESS_DOWN,
 
 
@@ -585,11 +593,18 @@ enum internal_special_keycodes {
 #define MA  MACRO
 
 
-// GOTO layer - 256 layer max
+// Toggle layer - 256 layer max
+#define TG(layer) (QK_TOGGLE_LAYER | ((layer)&0xFF))
+
+// Toggle layer and deactivate all others - 256 layer max
 #define TO(layer) (QK_TO | ((layer) & 0xFF))
 
-// Momentary switch layer - 256 layer max
+// Momentary toggle layer - 256 layer max
 #define MO(layer) (QK_MOMENTARY | ((layer) & 0xFF))
+
+// Set default layer - 256 layer max
+#define DF(layer) (QK_DEF_LAYER | ((layer) & 0xFF))
+
 
 // Change to BT HOST - 256 hosts max
 #define BT(host)   (QK_BT_HOST | ((host) & 0xFF))
@@ -597,7 +612,6 @@ enum internal_special_keycodes {
 // Reset BT Host config - 256 hosts max
 #define BT_RESET(host)   (QK_BT_HOST_RESET | ((host) & 0xFF))
 #define BT_RST BT_RESET
-
 
 
 /* US ANSI shifted keycode aliases */

@@ -46,18 +46,18 @@ enum layers {
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
         TO(BT),           KC_A,     KC_B,         KC_C,
-        TO(LAYER_1),    LSFT(KC_A), LSC(KC_DOWN), LAG(KC_DOWN),
-        TO(LAYER_0),      xxxxxxx,  RSC(KC_DOWN), xxxxxxx),
+        TG(LAYER_1),    LSFT(KC_A), LSC(KC_DOWN), LAG(KC_DOWN),
+        xxxxxxx,          xxxxxxx,  RSC(KC_DOWN), xxxxxxx),
 
     [LAYER_1] = LAYOUT(
         TO(BT),           KC_AT,    KC_LPRN,  KC_RPRN,
-        TO(LAYER_2),      KC_D,     KC_E,     KC_F,
-        TO(LAYER_0),      M(COPY),  M(PASTE), KC_F),
+        TG(LAYER_2),      KC_D,     KC_E,     KC_F,
+        TG(LAYER_1),      M(COPY),  M(PASTE), KC_F),
 
     [LAYER_2] = LAYOUT(
         TO(BT),           KC_G,     KC_H,     KC_J,
-        TO(LAYER_2),      KC_G,     KC_H,     KC_J,
-        TO(LAYER_1),      KC_G,     KC_H,     KC_J),
+        xxxxxxx,          KC_G,     KC_H,     KC_J,
+        TG(LAYER_2),      _______,  _______,  _______),
 
     [BT] = LAYOUT(
         TO(BT),           BT(0),    BT(1),     BT(2),
@@ -66,13 +66,13 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [BT_RST] = LAYOUT(
         TO(BT),          BT_RST(0), BT_RST(1), BT_RST(2),
-        TO(LAYER_0),      xxxxxxx, MO(BT_RST), xxxxxxx,
-        TO(LAYER_0),      xxxxxxx,  xxxxxxx,   xxxxxxx),
+        TO(LAYER_0),      _______,   _______,  _______,
+        TO(LAYER_0),      _______,   _______,  _______),
 
     [LEDS] = LAYOUT(
         TO(BT),           KC_LEDD,  KC_LEDU,  xxxxxxx,
-        TO(LAYER_0),      xxxxxxx,  xxxxxxx,  xxxxxxx,
-        TO(LAYER_0),      xxxxxxx,  MO(LEDS), xxxxxxx),
+        TO(LAYER_0),      _______,  _______,  _______,
+        TO(LAYER_0),      _______,  _______,  _______),
 
 };
 

@@ -12,8 +12,8 @@
 
 
 /* --------- Keymap configs --------- */
-#define NUM_LAYERS              (5)
 #define DEFAULT_LAYER           (0)
+#define MAX_LAYER               (32)
 
 #define NUM_MACROS              (2)
 #define MACRO_LEN               (3)

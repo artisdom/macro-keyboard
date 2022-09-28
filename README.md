@@ -21,9 +21,8 @@ Using esp-idf v5.0-beta1
 - Put BLE stuff in it's own component/folder.
 - Create an HID level to create packets to be routed to BLE or USB later on.
 - QMK features:
-	- KC_TRANSPARENT as MK32 does it, instead of having to duplicate the key in different layouts?
 	- Make keymap fully compatible with QMK (maybe use the [QMK configurator](https://github.com/qmk/qmk_configurator) or the web api to compile keymaps).
-	- Make keyboard compatible with VIA to change layouts and keymaps on the fly.
+	- Make keyboard compatible with VIA to change layouts and keymaps on the fly using NVS/EEPROM.
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level + adc calibration)
 - Clean up HID descriptors to make them common between USB and BLE stacks.
@@ -47,6 +46,7 @@ Should not be an issue as BLE host changes are supposed to happen without other 
 - ESP32-S3 [Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf).
 - [TinyS3](https://esp32s3.com/index.html#home) board.
 - [Blog](http://blog.komar.be/how-to-make-a-keyboard-the-matrix/) on matrix keyboard design. 
+- QMK [keymaps](https://docs.qmk.fm/#/keymap?id=keymap-and-layers) and [layers](https://docs.qmk.fm/#/feature_layers) documentation.
 
 ### Inspirations
 

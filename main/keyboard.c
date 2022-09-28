@@ -10,6 +10,7 @@
 #include "keyboard.h"
 #include "keymap.h"
 #include "key_definitions.h"
+#include "layers.h"
 #include "config.h"
 #include "matrix.h"
 #include "events.h"
@@ -22,9 +23,6 @@ static const char *TAG = "keyboard";
 
 static uint8_t keyboard_state[MATRIX_ROWS][MATRIX_COLS] = {0};
 static uint8_t keyboard_prev_state[MATRIX_ROWS][MATRIX_COLS] = {0};
-
-static uint8_t current_layer = DEFAULT_LAYER;
-static uint8_t prev_layer = DEFAULT_LAYER;
 
 // the HID report
 static uint8_t hid_report[2 + HID_REPORT_LEN] = {0};
@@ -44,10 +42,7 @@ static void keyboard__handle_media(uint16_t keycode, uint8_t keystate);
 
 
 static uint16_t keyboard__get_keycode(uint8_t row, uint8_t col) {
-
-    uint16_t keycode = keymaps[current_layer][row][col];
-
-    return keycode;
+    return layers__get_keycode(row, col);
 }
 
 
@@ -77,32 +72,33 @@ static uint16_t keyboard__check_modifier(uint16_t keycode) {
 static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t position[2]) {
 
     bool action_performed = false;
-    bool layer_changed = false;
     event_t event;
 
     if (keycode >= QK_ACTION) {
         action_performed = true;
 
         switch (keycode) {
+            case QK_TOGGLE_LAYER ... QK_TOGGLE_LAYER_MAX:
+                if (keystate == KEY_DOWN) {
+                    layers__toggle_layer(keycode & 0xFF);
+                }
+                break;
             case QK_TO ... QK_TO_MAX:
                 if (keystate == KEY_DOWN) {
-                    current_layer = keycode & 0xFF;
-                    ESP_LOGD(TAG, "Goto layer %d", current_layer);
-                    layer_changed = true;
+                    layers__deactivate_all();
+                    layers__activate_layer(keycode & 0xFF);
                 }
                 break;
             case QK_MOMENTARY ... QK_MOMENTARY_MAX:
                 if (keystate == KEY_DOWN) {
-                    prev_layer = current_layer;
-                    current_layer = keycode & 0xFF;
-                    ESP_LOGD(TAG, "Momentary to layer %d", current_layer);
-                    layer_changed = true;
+                    layers__activate_layer(keycode & 0xFF);
                 }
                 else { // KEY_UP
-                    current_layer = prev_layer;
-                    ESP_LOGD(TAG, "Momentary back to layer %d", current_layer);
-                    layer_changed = true;
+                    layers__deactivate_layer(keycode & 0xFF);
                 }
+                break;
+            case QK_DEF_LAYER ... QK_DEF_LAYER_MAX:
+                layers__set_default_layer(keycode & 0xFF);
                 break;
             case QK_BT_HOST ... QK_BT_HOST_MAX:
                 event.type = EVENT_BT_CHANGE_HOST;
@@ -125,13 +121,10 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                     xQueueSend(event_q, (void *) &event, (TickType_t) 0);
                     ESP_LOGD(TAG, "EVENT_LEDS_BRIGHTNESS %d", keycode - QK_BRIGHTNESS);
                 }
+                break;
             default:
                 break;
         }
-    }
-
-    if (layer_changed) {
-        memory__set_current_layer(current_layer);
     }
 
     return action_performed;
@@ -151,10 +144,9 @@ static void keyboard__handle_media(uint16_t keycode, uint8_t keystate) {
 
 
 void keyboard__init() {
-    ESP_LOGI(TAG, "Init NVS");
-    
-    current_layer = memory__get_current_layer();
-    ESP_LOGD(TAG, "Setting layer from nvs to %d", current_layer);
+    ESP_LOGI(TAG, "Init keyboard");
+
+    layers__init();
 }
 
 
@@ -204,11 +196,11 @@ uint8_t *keyboard__check_state() {
                             uint8_t modifier = keyboard__check_modifier(key);
                             hid_report[0] |= modifier;
 
-                            // ESP_LOGD(TAG, "Macro %d, adding key %d at %d", macro_id, key, report_index);
                             uint8_t hid_keycode = key & QK_BASIC_MAX;
                             if ((hid_keycode < KC_MODS) || (hid_keycode > KC_MODS_MAX)) {
+                                // ESP_LOGD(TAG, "Macro %d, adding key 0x%x at %d", macro_id, hid_keycode, report_index);
                                 hid_report[report_index] = hid_keycode;
-                                hid_report_key_index[row][col] = report_index;
+                                report_index++;
                                 hid_report_index++;
                             }
 
@@ -257,6 +249,7 @@ uint8_t *keyboard__check_state() {
                         
                         uint8_t hid_keycode = key & QK_BASIC_MAX;
                         if ((hid_keycode < KC_MODS) || (hid_keycode > KC_MODS_MAX)) {
+                            // ESP_LOGD(TAG, "Macro %d, removing key 0x%x at %d", macro_id, hid_keycode, report_index);
                             hid_report[report_index] = 0;
                             report_index++;
                             hid_report_index--;
