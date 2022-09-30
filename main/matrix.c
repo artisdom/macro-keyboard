@@ -115,7 +115,7 @@ void matrix__scan() {
         gpio_set_level(row_gpios[row], 1);
     }
 
-    ESP_LOGD(TAG, "%ld states: %d, %d, %d", millis(), matrix_state[0][0], matrix_state[0][1], matrix_state[0][2]);
+    // ESP_LOGD(TAG, "%ld states: %d, %d, %d", millis(), matrix_state[0][0], matrix_state[0][1], matrix_state[0][2]);
 
 }
 
@@ -133,7 +133,7 @@ void matrix__rtc_setup(void) {
         if (rtc_gpio_is_valid_gpio(pin) == 1) {
             rtc_gpio_init(pin);
             rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_OUTPUT);
-            rtc_gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_0);
+            rtc_gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_3); // need to have enough current go through the diode
             rtc_gpio_set_level(pin, 1);
 
             ESP_LOGD(TAG,"%d is level %d", pin, gpio_get_level(pin));
@@ -175,6 +175,7 @@ void matrix__rtc_deinit() {
         if (rtc_gpio_is_valid_gpio(pin) == 1) {
             rtc_gpio_set_level(pin, 0);
             rtc_gpio_set_direction(pin, RTC_GPIO_MODE_DISABLED);
+            rtc_gpio_deinit(pin);
             gpio_reset_pin(pin);
         }
     }
@@ -185,6 +186,7 @@ void matrix__rtc_deinit() {
         if (rtc_gpio_is_valid_gpio(pin) == 1) {
             rtc_gpio_set_level(pin, 0);
             rtc_gpio_set_direction(pin, RTC_GPIO_MODE_DISABLED);
+            rtc_gpio_deinit(pin);
             gpio_reset_pin(pin);
         }
     }

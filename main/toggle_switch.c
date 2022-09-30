@@ -100,3 +100,38 @@ static void IRAM_ATTR toggle_switch__gpio_isr_handler(void *arg) {
     }
     last_interrupt = time;
 }
+
+
+
+// RTC gpio for deep sleep wakeup
+void toggle_switch__rtc_setup() {
+    uint64_t rtc_mask = 0;
+
+    ESP_LOGI(TAG, "Init RTC Toggle switch for deep sleep");
+
+    gpio_num_t pin = toggle_usb_gpio;
+    if (rtc_gpio_is_valid_gpio(pin) == 1) {
+        rtc_gpio_init(pin);
+        rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_ONLY);
+        rtc_gpio_wakeup_enable(pin, GPIO_INTR_HIGH_LEVEL);
+
+        rtc_mask |= 1llu << pin;
+    }
+    else {
+        ESP_LOGW(TAG, "gpio %d is not a valid RTC pin", pin);
+    }
+
+    esp_sleep_enable_ext1_wakeup(rtc_mask, ESP_EXT1_WAKEUP_ANY_HIGH);
+}
+
+
+void toggle_switch__rtc_deinit() {
+
+    gpio_num_t pin = toggle_ble_gpio;
+    if (rtc_gpio_is_valid_gpio(pin) == 1) {
+        rtc_gpio_set_direction(pin, RTC_GPIO_MODE_DISABLED);
+        rtc_gpio_deinit(pin);
+        gpio_reset_pin(pin);
+    }
+}
+

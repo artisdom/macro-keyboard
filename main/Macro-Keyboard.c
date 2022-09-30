@@ -247,10 +247,18 @@ void event_handler_task(void *parameters) {
                         if (BLE_ENABLED) {
                             ble_deinit();
                         }
-                        if (USB_ENABLED) {
+                        if (USB_ENABLED && battery__is_charging()) {
                             ESP_LOGI(TAG, "Toggle USB");
                             mode = event.data;
                             usb__init();
+                        }
+                        else {
+                            toggle_switch__rtc_setup();
+                            // TODO: wakeup on USB port connection
+
+                            esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+                            ESP_LOGW(TAG, "Going to sleep................!");
+                            esp_deep_sleep_start();
                         }
                     }
                     else {
@@ -320,21 +328,23 @@ static void logging_init() {
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
     esp_log_level_set("matrix", ESP_LOG_INFO);
-    esp_log_level_set("keyboard", ESP_LOG_DEBUG);
-    esp_log_level_set("layers", ESP_LOG_DEBUG);
+    esp_log_level_set("keyboard", ESP_LOG_INFO);
+    esp_log_level_set("layers", ESP_LOG_INFO);
     esp_log_level_set("memory", ESP_LOG_INFO);
     esp_log_level_set("leds", ESP_LOG_INFO);
-    esp_log_level_set("toggle_switch", ESP_LOG_INFO);
-    esp_log_level_set("battery", ESP_LOG_INFO);
+    esp_log_level_set("toggle_switch", ESP_LOG_DEBUG);
+    esp_log_level_set("battery", ESP_LOG_DEBUG);
     esp_log_level_set("usb", ESP_LOG_INFO);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
     esp_log_level_set("hid_le_prf", ESP_LOG_INFO);
 
 }
 
+
 void app_main(void) {
 
     matrix__rtc_deinit(); // run first to disable interrupts
+    toggle_switch__rtc_deinit();
 
     logging_init();
     ESP_LOGI(TAG, "Hello");

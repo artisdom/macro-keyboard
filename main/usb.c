@@ -97,6 +97,7 @@ void usb__init() {
     };
 
     ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+    tud_connect();
 
     usb_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
     usb_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
@@ -112,6 +113,12 @@ esp_err_t usb__deinit() {
     ESP_LOGI(TAG, "Deinit USB");
 
     run_tasks = false; // used to stop all USB tasks
+
+    bool dis = tud_disconnect();
+    if (dis) {
+        ESP_LOGE(TAG, "usb disconnect failed");
+        return dis;
+    }
 
     ret = tusb_stop_task();
     if (ret) {
@@ -147,7 +154,7 @@ void usb__keyboard_task(void *pvParameters) {
             //pend on MQ, if timeout triggers, just wait again.
             if (xQueueReceive(usb_keyboard_q, &report, (TickType_t) 100)) {
                 //if we are not connected, discard.
-                if (tud_mounted()) {
+                if (tud_ready()) {
                     ESP_LOGD(TAG, "HID report:  %d,%d, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
                     report[0], report[1], report[2], report[3],
                     report[4], report[5], report[6], report[7]);
@@ -185,7 +192,7 @@ void usb__media_task(void *pvParameters) {
             //pend on MQ, if timeout triggers, just wait again.
             if (xQueueReceive(usb_media_q, &report, (TickType_t) 100)) {
                 //if we are not connected, discard.
-                if (tud_mounted()) {
+                if (tud_ready()) {
                     uint8_t cc_report[HID_CC_REPORT_LEN] = { 0 };
                 
                     if (report[1] == 1) {

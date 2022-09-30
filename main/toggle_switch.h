@@ -11,4 +11,7 @@ enum toggle_types_e {
 void toggle_switch__init();
 uint8_t toggle_switch__get_state();
 
+void toggle_switch__rtc_setup();
+void toggle_switch__rtc_deinit();
+
 #endif
