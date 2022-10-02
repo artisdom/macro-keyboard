@@ -5,13 +5,17 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-#include "driver/gpio.h"
 #include "tinyusb.h"
 #include "tusb_tasks.h"
 #include "class/hid/hid_device.h"
+#include "driver/gpio.h"
+#include "driver/rtc_io.h"
+#include "esp_sleep.h"
+#include "esp_timer.h"
 
 #include "usb.h"
 #include "config.h"
+#include "events.h"
 
 
 /* --------- Global Variables --------- */
@@ -27,6 +31,9 @@ QueueHandle_t usb_media_q;
 /* --------- Local Defines --------- */
 #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
 #define HID_ITF_PROTOCOL_CONSUMER   (3)
+
+#define ESP_INTR_FLAG_DEFAULT       (0)
+#define USB_GPIO_DEBOUNCE_TIME      (4000) // in us
 
 
 /* --------- Local Variables --------- */
@@ -46,9 +53,11 @@ static const uint8_t hid_configuration_descriptor[] = {
     TUD_HID_DESCRIPTOR(0, 0, false, sizeof(hid_report_descriptor), 0x81, 16, 10),
 };
 
-
+static const gpio_num_t usb_bus_gpio = GPIO_NUM_21;
 
 /* --------- Local Functions --------- */
+static void usb__init_gpio();
+static void usb__gpio_isr_handler(void *arg);
 
 
 
@@ -213,3 +222,108 @@ void usb__media_task(void *pvParameters) {
     vTaskDelete(NULL);
 
 }
+
+
+
+// --------- USB Detection ---------
+// Bus Voltage is routed to a RTC GPIO pin to when cable is plugged in
+
+static void usb__init_gpio() {
+
+    uint64_t pin_mask = (1ULL << usb_bus_gpio);
+
+    gpio_config_t io_conf = {
+        .intr_type = GPIO_INTR_ANYEDGE,
+        .mode = GPIO_MODE_INPUT,
+        .pin_bit_mask = pin_mask,
+        .pull_down_en = 0,
+        .pull_up_en = 0
+    };
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+}
+
+
+void usb__init_detection() {
+
+    ESP_LOGI(TAG, "Init USB Detection");
+
+    usb__init_gpio();
+
+    //install gpio isr service
+    // ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
+    //hook isr handler for specific gpio pin
+    ESP_ERROR_CHECK(gpio_isr_handler_add(usb_bus_gpio, usb__gpio_isr_handler, (void*) NULL));
+}
+
+
+bool usb__is_connected() {
+
+    uint8_t level = gpio_get_level(usb_bus_gpio);
+    ESP_LOGD(TAG, "USB Bus voltage is %d", level);
+
+    if (level) {
+        return true;
+    }
+    return false;
+}
+
+
+bool usb__is_pin_mask(uint64_t pin_mask) {
+
+    if (pin_mask & (1ull << usb_bus_gpio)) {
+        return true;
+    }
+    return false;
+}
+
+
+static void IRAM_ATTR usb__gpio_isr_handler(void *arg) {
+    static int64_t last_interrupt;
+    int64_t time;
+    event_t event = {
+        .type = EVENT_USB_PORT,
+        .data = 0,
+    };
+
+    time = esp_timer_get_time();
+    if (time - last_interrupt > USB_GPIO_DEBOUNCE_TIME) {
+            xQueueSendFromISR(event_q, &event, (TickType_t) 0);
+    }
+    last_interrupt = time;
+}
+
+
+void usb__rtc_setup(uint8_t level_to_wakeup) {
+    uint64_t rtc_mask = 0;
+
+    ESP_LOGI(TAG, "Init RTC USB bus for deep sleep");
+
+    gpio_num_t pin = usb_bus_gpio;
+    if (rtc_gpio_is_valid_gpio(pin) == 1) {
+        rtc_gpio_init(pin);
+        rtc_gpio_set_direction(pin, RTC_GPIO_MODE_INPUT_ONLY);
+        rtc_gpio_wakeup_enable(pin, GPIO_INTR_HIGH_LEVEL);
+
+        rtc_mask |= 1llu << pin;
+    }
+    else {
+        ESP_LOGW(TAG, "gpio %d is not a valid RTC pin", pin);
+    }
+
+    // Wakeup on specified level
+    esp_sleep_enable_ext0_wakeup(usb_bus_gpio, level_to_wakeup);
+}
+
+
+void usb__rtc_deinit() {
+
+    gpio_num_t pin = usb_bus_gpio;
+    if (rtc_gpio_is_valid_gpio(pin) == 1) {
+        rtc_gpio_set_direction(pin, RTC_GPIO_MODE_DISABLED);
+        rtc_gpio_deinit(pin);
+        gpio_reset_pin(pin);
+    }
+}
+
+

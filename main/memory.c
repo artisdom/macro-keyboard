@@ -25,12 +25,21 @@ static uint32_t sleep_counter;
 static void init_handle(char *namespace, nvs_handle_t *handle);
 static uint32_t increment_counter(nvs_handle_t handle, char *key);
 
+static void mem_set_u8(nvs_handle_t handle, char* key, uint8_t value);
+static void mem_set_u16(nvs_handle_t handle, char* key, uint16_t value);
+static void mem_set_u32(nvs_handle_t handle, char* key, uint32_t value);
+static void mem_set_u64(nvs_handle_t handle, char* key, uint64_t value);
+static void mem_set_str(nvs_handle_t handle, char* key, char* value);
+static void mem_set_blob(nvs_handle_t handle, char* key, void* value, size_t size);
+static void mem_write_error_check(esp_err_t err, char *key);
+
 static void mem_get_u8(nvs_handle_t handle, char *key, void *to);
 static void mem_get_u16(nvs_handle_t handle, char *key, void *to);
 static void mem_get_u32(nvs_handle_t handle, char *key, void *to);
 static void mem_get_u64(nvs_handle_t handle, char *key, void *to);
 static void mem_get_str(nvs_handle_t handle, char *key, void *to, size_t length);
 static void mem_get_blob(nvs_handle_t handle, char *key, void *to, size_t size);
+static void mem_read_error_check(esp_err_t err, char *key);
 
 
 
@@ -89,7 +98,6 @@ uint32_t memory__get_sleep_counter() {
 
 
 static uint32_t increment_counter(nvs_handle_t handle, char *key) {
-    esp_err_t err;
     uint32_t counter = 0;
 
     mem_get_u32(handle, key, &counter);
@@ -97,10 +105,7 @@ static uint32_t increment_counter(nvs_handle_t handle, char *key) {
     counter++;
 
     ESP_LOGD(TAG, "Updating %s counter in NVS ... ", key);
-    err = nvs_set_u32(handle, key, counter);
-    ESP_ERROR_CHECK(err);
-    err = nvs_commit(handle);
-    ESP_ERROR_CHECK(err);
+    mem_set_u32(handle, key, counter);
 
     ESP_LOGI(TAG, "%s : %ld", key, counter);
 
@@ -108,13 +113,27 @@ static uint32_t increment_counter(nvs_handle_t handle, char *key) {
 }
 
 
+// Sleep status
+// Used to know if keyboard should go back to sleep after a wakeup (when usb cable is plugged in)
+void memory__set_sleep_status(bool sleep_status) {
+    ESP_LOGD(TAG, "Setting sleep status: %d", sleep_status);
+    mem_set_u8(system_handle, "sleep_status", sleep_status);
+}
+
+
+bool memory__get_sleep_status() {
+    uint8_t status = 0;
+
+    mem_get_u8(system_handle, "sleep_status", &status);
+
+    return (bool) status;
+}
+
+
 // Layers
 void memory__set_current_layer(uint8_t layer) {
-    esp_err_t err;
-
     ESP_LOGD(TAG, "Setting current layer: %d", layer);
-    err = nvs_set_u8(keyboard_handle, "current_layer", layer);
-    ESP_ERROR_CHECK(err);
+    mem_set_u8(keyboard_handle, "current_layer", layer);
 }
 
 
@@ -129,12 +148,10 @@ uint8_t memory__get_current_layer() {
 
 // Bluetooth hosts
 void memory__set_bluetooth_host(uint8_t host_id, bt_host_t host) {
-    esp_err_t err;
     char key[6] = "host0";
     itoa(host_id, &(key[4]), 10);
 
-    err = nvs_set_blob(ble_handle, key, &host, sizeof(bt_host_t));
-    ESP_ERROR_CHECK(err);
+    mem_set_blob(ble_handle, key, &host, sizeof(bt_host_t));
 }
 
 
@@ -154,11 +171,9 @@ bt_host_t memory__get_bluetooth_host(uint8_t host_id) {
 
 
 void memory__set_bluetooth_last_host(uint8_t host_id) {
-    esp_err_t err;
 
     ESP_LOGD(TAG, "Setting last BT host: %d", host_id);
-    err = nvs_set_u8(ble_handle, "last_host", host_id);
-    ESP_ERROR_CHECK(err);
+    mem_set_u8(ble_handle, "last_host", host_id);
 }
 
 
@@ -171,12 +186,11 @@ uint8_t memory__get_bluetooth_last_host() {
 }
 
 
+// Leds
 void memory__set_leds_brightness(uint8_t brightness) {
-    esp_err_t err;
 
     ESP_LOGD(TAG, "Setting leds brightness: %d", brightness);
-    err = nvs_set_u8(keyboard_handle, "brightness", brightness);
-    ESP_ERROR_CHECK(err);
+    mem_set_u8(keyboard_handle, "brightness", brightness);
 }
 
 
@@ -189,63 +203,94 @@ uint8_t memory__get_leds_brightness() {
 }
 
 
+// --------- Writes ---------
+static void mem_set_u8(nvs_handle_t handle, char* key, uint8_t value) {
+    esp_err_t err = nvs_set_u8(handle, key, value);
+    mem_write_error_check(err, key);
+    err = nvs_commit(handle);
+    ESP_ERROR_CHECK(err);
+}
+
+
+static void mem_set_u16(nvs_handle_t handle, char* key, uint16_t value) {
+    esp_err_t err = nvs_set_u16(handle, key, value);
+    mem_write_error_check(err, key);
+    err = nvs_commit(handle);
+    ESP_ERROR_CHECK(err);
+}
+
+
+static void mem_set_u32(nvs_handle_t handle, char* key, uint32_t value) {
+    esp_err_t err = nvs_set_u32(handle, key, value);
+    mem_write_error_check(err, key);
+    err = nvs_commit(handle);
+    ESP_ERROR_CHECK(err);
+}
+
+
+static void mem_set_u64(nvs_handle_t handle, char* key, uint64_t value) {
+    esp_err_t err = nvs_set_u64(handle, key, value);
+    mem_write_error_check(err, key);
+    err = nvs_commit(handle);
+    ESP_ERROR_CHECK(err);
+}
+
+
+static void mem_set_str(nvs_handle_t handle, char* key, char* value) {
+    esp_err_t err = nvs_set_str(handle, key, value);
+    mem_write_error_check(err, key);
+    err = nvs_commit(handle);
+    ESP_ERROR_CHECK(err);
+}
+
+
+static void mem_set_blob(nvs_handle_t handle, char* key, void* value, size_t size) {
+    esp_err_t err = nvs_set_blob(handle, key, value, size);
+    mem_write_error_check(err, key);
+    err = nvs_commit(handle);
+    ESP_ERROR_CHECK(err);
+}
+
+
+static void mem_write_error_check(esp_err_t err, char *key) {
+    if (err == ESP_ERR_NVS_NOT_ENOUGH_SPACE) {
+        ESP_LOGE(TAG, "Error setting %s in NVS. Not enough space!", key);
+    }
+    else if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error setting %s in NVS: %d", key, err);
+    }
+    else {
+        ESP_LOGD(TAG, "Succesfully wrote %s to NVS", key);
+    }
+}
+
+
+// --------- Reads ---------
 static void mem_get_u8(nvs_handle_t handle, char *key, void *to) {
 
     esp_err_t err = nvs_get_u8(handle, key, to);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "%s not found in NVS", key);
-    }
-    else if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting %s from NVS", key);
-    }
-    else {
-        ESP_LOGD(TAG, "Successfully got %s from NVS", key);
-    }
+    mem_read_error_check(err, key);
 }
 
 
 static void mem_get_u16(nvs_handle_t handle, char *key, void *to) {
 
     esp_err_t err = nvs_get_u16(handle, key, to);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "%s not found in NVS", key);
-    }
-    else if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting %s from NVS", key);
-    }
-    else {
-        ESP_LOGD(TAG, "Successfully got %s from NVS", key);
-    }
+    mem_read_error_check(err, key);
 }
 
 
 static void mem_get_u32(nvs_handle_t handle, char *key, void *to) {
 
     esp_err_t err = nvs_get_u32(handle, key, to);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "%s not found in NVS", key);
-    }
-    else if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting %s from NVS", key);
-    }
-    else {
-        ESP_LOGD(TAG, "Successfully got %s from NVS", key);
-    }
+    mem_read_error_check(err, key);
 }
 
 
 static void mem_get_u64(nvs_handle_t handle, char *key, void *to) {
 
     esp_err_t err = nvs_get_u64(handle, key, to);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "%s not found in NVS", key);
-    }
-    else if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting %s from NVS", key);
-    }
-    else {
-        ESP_LOGD(TAG, "Successfully got %s from NVS", key);
-    }
+    mem_read_error_check(err, key);
 }
 
 
@@ -256,13 +301,8 @@ static void mem_get_str(nvs_handle_t handle, char *key, void *to, size_t length)
     memset(str, 0x00, len);
 
     esp_err_t err = nvs_get_str(handle, key, str, &len);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "%s not found in NVS", key);
-    }
-    else if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting %s from NVS", key);
-    }
-    else {
+    mem_read_error_check(err, key);
+    if (err == ESP_OK) {
         ESP_LOGD(TAG, "Successfully got %s from NVS", key);
         memset(to, 0x00, length);
         strcpy(to, str);
@@ -274,11 +314,16 @@ static void mem_get_str(nvs_handle_t handle, char *key, void *to, size_t length)
 static void mem_get_blob(nvs_handle_t handle, char *key, void *to, size_t size) {
 
     esp_err_t err = nvs_get_blob(handle, key, to, &size);
+    mem_read_error_check(err, key);
+}
+
+
+static void mem_read_error_check(esp_err_t err, char *key) {
     if (err == ESP_ERR_NVS_NOT_FOUND) {
         ESP_LOGW(TAG, "%s not found in NVS", key);
     }
     else if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error getting %s from NVS", key);
+        ESP_LOGE(TAG, "Error getting %s from NVS %d", key, err);
     }
     else {
         ESP_LOGD(TAG, "Successfully got %s from NVS", key);

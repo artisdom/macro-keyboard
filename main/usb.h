@@ -15,7 +15,7 @@ extern QueueHandle_t usb_keyboard_q;
 extern QueueHandle_t usb_media_q;
 
 
-
+// USB device
 void usb__init();
 esp_err_t usb__deinit(void);
 
@@ -23,8 +23,10 @@ void usb__keyboard_task(void *pvParameters);
 void usb__media_task(void *pvParameters);
 
 
-
-
-
+// USB cable detection
+void usb__init_detection();
+bool usb__is_connected();
+void usb__rtc_setup(uint8_t level_to_wakeup);
+void usb__rtc_deinit();
 
 #endif

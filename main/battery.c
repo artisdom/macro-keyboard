@@ -6,16 +6,13 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
-// #include "driver/adc.h"
-// #include "esp_adc_cal.h"
 
 #include "battery.h"
 #include "config.h"
 
 
 /* --------- Local Defines --------- */
-#define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
-#define NO_OF_SAMPLES   64          //Multisampling
+#define NO_OF_SAMPLES   256          //Multisampling
 
 
 /* --------- Local Variables --------- */
@@ -27,9 +24,12 @@ static const adc_bitwidth_t width = ADC_BITWIDTH_12;
 static const adc_atten_t atten = ADC_ATTEN_DB_2_5;
 static const adc_unit_t unit = ADC_UNIT_1;
 static adc_cali_handle_t cali_handle;
-// static esp_adc_cal_characteristics_t *adc_chars;
 
-static const float bat_voltage_div_ratio = 0.2658; //based on TinyS3 schematic
+// Based on TinyS3 Schematic
+// Voltage divider -> Vpin = 160k / (442k + 160k) * Vbat
+// static const float bat_voltage_div_ratio = 0.2658;
+// Compensated for error in readings with theoretical ratio
+static const float bat_voltage_div_ratio = 0.2619;
 // approximations for now
 static const uint16_t bat_max_voltage = 4200; // in mV
 static const uint16_t bat_min_voltage = 3400; // in mV
@@ -56,7 +56,6 @@ static uint32_t battery__get_voltage() {
     reading /= NO_OF_SAMPLES;
 
     adc_cali_raw_to_voltage(cali_handle, reading, (int *) &voltage);
-    // voltage = esp_adc_cal_raw_to_voltage(reading, adc_chars);
     bat_voltage = (uint32_t) (voltage / bat_voltage_div_ratio);
 
     ESP_LOGD(TAG, "reading: %ld   voltage on pin: %ldmV   Vbat: %ldmV", reading, voltage, bat_voltage);
@@ -107,12 +106,6 @@ void battery__init() {
     };
     ESP_ERROR_CHECK(adc_cali_create_scheme_curve_fitting(&cali_config, &cali_handle));
 
-    // // ADC for Battery voltage pin
- //    adc1_config_width(width);
- //    adc1_config_channel_atten(channel, atten);
-
- //    adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    // esp_adc_cal_characterize(unit, atten, width, DEFAULT_VREF, adc_chars);
 
     // GPIO driver for USB 5V detection
     uint64_t pin_mask = (1ULL << usb_bus_gpio);

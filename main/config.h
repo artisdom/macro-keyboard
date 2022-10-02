@@ -27,9 +27,10 @@
 
 
 /* --------- Global configs --------- */
-#define DEEP_SLEEP_ENABLED      (1)
-#define DEEP_SLEEP_TIMEOUT      (120) //in seconds 
-#define USB_ENABLED             (0) // enable hid over usb
+#define DEEP_SLEEP_ENABLED      (0)
+#define DEEP_SLEEP_TIMEOUT      (120) // in seconds 
+#define USB_ENABLED             (0)   // enable hid over usb
+#define USB_DETECT_ENABLED      (1)   // detect cable plugged in
 #define TOGGLE_SWITCH_ENABLED   (1)
 #define BATTERY_ENABLED         (1)
 

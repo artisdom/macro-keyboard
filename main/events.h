@@ -13,6 +13,7 @@ typedef enum event_type_e {
     EVENT_LEDS_BT_ADV,
     EVENT_LEDS_BT_ADV_ALL,
     EVENT_LEDS_BT_CONNECTED,
+    EVENT_USB_PORT,
 
     EVENT_MAX = 0xFF,
 } event_type_t;

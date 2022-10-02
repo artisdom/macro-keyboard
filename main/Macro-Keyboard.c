@@ -43,6 +43,8 @@ static bool DEEP_SLEEP = true;
 static uint8_t mode = TOGGLE_BLE;
 
 
+/* --------- Local Functons --------- */
+static void sleep(bool rtc_keyboard, bool rtc_toggle_switch, bool rtc_usb, bool rtc_usb_direction);
 
 
 void keyboard_task(void *parameters) {
@@ -59,11 +61,6 @@ void keyboard_task(void *parameters) {
         if (memcmp(past_report, current_report, sizeof(past_report)) != 0) {
             DEEP_SLEEP = false;
 
-            // if (ble_keyboard_q == NULL) {
-            //     ESP_LOGE(TAG, "keyboard queue not initialized");
-            //     continue;
-            // }
-
             memcpy(past_report, current_report, sizeof(past_report));
 
             ESP_LOGD(TAG, "HID report:  0x%x,0x%x,  0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
@@ -78,7 +75,6 @@ void keyboard_task(void *parameters) {
             }
 
         }
-
         vTaskDelay(KEYBOARD_RATE / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
@@ -173,11 +169,7 @@ void deep_sleep_task(void *pvParameters) {
                     continue;                    
                 }
 
-                // wake up esp32 using rtc gpio
-                matrix__rtc_setup();
-                esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
-                ESP_LOGW(TAG, "Going to sleep................!");
-                esp_deep_sleep_start();
+                sleep(true, false, false, 0);
             }
             if (DEEP_SLEEP == false) {
                 current_time_passed = 0;
@@ -195,6 +187,7 @@ void deep_sleep_task(void *pvParameters) {
 void event_handler_task(void *parameters) {
 
     bt_event_t bt_event;
+    bool usb_connected;
 
     ESP_LOGI(TAG, "Starting event handler task");
 
@@ -244,21 +237,22 @@ void event_handler_task(void *parameters) {
                     }
                     else if ((event.data == TOGGLE_USB)) {
                         // ESP_LOGW(TAG, "event toggle usb");
+                        usb_connected = usb__is_connected();
                         if (BLE_ENABLED) {
                             ble_deinit();
                         }
-                        if (USB_ENABLED && battery__is_charging()) {
-                            ESP_LOGI(TAG, "Toggle USB");
-                            mode = event.data;
-                            usb__init();
+                        if (USB_ENABLED) {
+                            if (usb_connected) {
+                                ESP_LOGI(TAG, "Toggle USB");
+                                mode = event.data;
+                                usb__init();
+                            }
+                            else {
+                                sleep(false, true, true, !usb_connected);
+                            }
                         }
                         else {
-                            toggle_switch__rtc_setup();
-                            // TODO: wakeup on USB port connection
-
-                            esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
-                            ESP_LOGW(TAG, "Going to sleep................!");
-                            esp_deep_sleep_start();
+                            sleep(false, true, false, 0);
                         }
                     }
                     else {
@@ -288,14 +282,26 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
+                case EVENT_USB_PORT: {
+                    vTaskDelay(1 / portTICK_PERIOD_MS); // delay to wait for voltage to stabilise on pin
+                    usb_connected = usb__is_connected();
+                    if (usb_connected == true) {
+                        ESP_LOGI(TAG, "USB Connected");
+                    }
+                    else {
+                        ESP_LOGI(TAG, "USB Disconnected");
+                        if (mode == TOGGLE_USB) {
+                            sleep(false, true, true, 1);
+                        }
+
+                    }
+                    break;
+                }
                 default:
                     ESP_LOGW(TAG, "Unhandled event type");
                     break;
             }
-
         }
-
-
     }
     vTaskDelete(NULL);
 }
@@ -343,19 +349,33 @@ static void logging_init() {
 
 void app_main(void) {
 
-    matrix__rtc_deinit(); // run first to disable interrupts
+    // run first to disable interrupts
+    matrix__rtc_deinit();
     toggle_switch__rtc_deinit();
+    usb__rtc_deinit();
 
     logging_init();
     ESP_LOGI(TAG, "Hello");
 
     memory__init();
 
-    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) {
+    esp_sleep_wakeup_cause_t wakeup = esp_sleep_get_wakeup_cause();
+    if (wakeup == ESP_SLEEP_WAKEUP_EXT1) {
         ESP_LOGI(TAG, "Wakeup from deep-sleep");
         uint64_t bit_mask = esp_sleep_get_ext1_wakeup_status();
         ESP_LOGD(TAG, "wakeup gpio bit mask: 0x%llx", bit_mask);
         memory__set_sleep_counter();
+    }
+    else if (wakeup == ESP_SLEEP_WAKEUP_EXT0) {
+         ESP_LOGI(TAG, "Wakeup from USB bus GPIO");
+         if (memory__get_sleep_status() == true) {
+            if (USB_ENABLED) {
+                sleep(false, true, true, 1);
+            }
+            else {
+                sleep(false, true, false, 0);
+            }
+         }
     }
     else {
         ESP_LOGI(TAG, "Wakeup from normal boot");
@@ -380,6 +400,10 @@ void app_main(void) {
         usb__init();
     }
 
+    if (USB_DETECT_ENABLED) {
+        usb__init_detection();
+    }
+
     if (LED_ENABLED) {
         leds__init();
     }
@@ -398,3 +422,27 @@ void app_main(void) {
     }
 
 }
+
+
+
+static void sleep(bool rtc_keyboard, bool rtc_toggle_switch, bool rtc_usb, bool rtc_usb_direction) {
+
+    ESP_LOGD(TAG, "Setting up for sleep...");
+    if (rtc_keyboard) {
+        matrix__rtc_setup();
+    }
+    if (rtc_toggle_switch && TOGGLE_SWITCH_ENABLED) {
+        toggle_switch__rtc_setup();
+    }
+    if (rtc_usb && USB_DETECT_ENABLED) {
+        memory__set_sleep_status(!rtc_usb_direction);
+        usb__rtc_setup(rtc_usb_direction);
+    }
+
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    ESP_LOGW(TAG, "Going to sleep................!");
+    esp_deep_sleep_start();
+
+}
+
+
