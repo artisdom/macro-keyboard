@@ -20,8 +20,38 @@ venv/
 
 # ESP-IDF
 sdkconfig*
+!sdkconfig.defaults
 
 # WIP stuff
 not_components/
 MK32/
 qmk/
+
+
+# Kicad files
+
+# Temporary files
+*.000
+*.bak
+*-bak
+*-backups
+*.bck
+*~
+_autosave-*
+*.tmp
+
+*.kicad_pcb-bak
+*.sch-bak
+*.kicad_prl
+*.tmp
+*-save.pro
+*-save.kicad_pcb
+fp-info-cache
+
+# Netlist files (exported from Eeschema)
+*.net
+
+# Autorouter files (exported from Pcbnew)
+*.dsn
+*.ses
+

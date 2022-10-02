@@ -340,7 +340,7 @@ static void logging_init() {
     esp_log_level_set("leds", ESP_LOG_INFO);
     esp_log_level_set("toggle_switch", ESP_LOG_DEBUG);
     esp_log_level_set("battery", ESP_LOG_DEBUG);
-    esp_log_level_set("usb", ESP_LOG_INFO);
+    esp_log_level_set("usb", ESP_LOG_DEBUG);
     esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
     esp_log_level_set("hid_le_prf", ESP_LOG_INFO);
 

@@ -2,8 +2,6 @@
 
 A Macro keyboard built on ESP32-S3.    
 
-Using esp-idf v5.0-beta1
-
 
 ## Features
 
@@ -15,6 +13,15 @@ Using esp-idf v5.0-beta1
 - Support for multiple BLE hosts and specific key layout to switch between them.
 - LED backlight with brightness control + effects for BLE actions
 
+## Requirements
+
+### Firmware
+
+Using esp-idf (master branch)
+
+### Hardware
+
+Using Kicad v6.0
 
 ## Todo
 
@@ -23,11 +30,13 @@ Using esp-idf v5.0-beta1
 - QMK features:
 	- Make keymap fully compatible with QMK (maybe use the [QMK configurator](https://github.com/qmk/qmk_configurator) or the web api to compile keymaps).
 	- Make keyboard compatible with VIA to change layouts and keymaps on the fly using NVS/EEPROM.
+	- Support for more Layer modifiers (one-shot, tap, etc...).
+	- LED indicator for layer change.
 - Better NVS stuff (layouts, configs, ...etc).
-- Better Battery reports (when init ble connection use read level + adc calibration)
+- Better Battery reports (when init ble connection use read level)
 - Clean up HID descriptors to make them common between USB and BLE stacks.
 - Better USB deinit (waiting on TinyUSB implementation).
-- Toggle switch between BLE and USB (partially done: need wakeup on switch change).
+- USB CDC and HID device in parallel to get log outputs in serial port.
 - MIDI device?
 - Mutiple BLE hosts in parallel? + BLE 5 features?
 - If design is kept as BLE only, shift implementation to NimBLE stack (not Bluedroid).
@@ -51,4 +60,4 @@ Should not be an issue as BLE host changes are supposed to happen without other 
 ### Inspirations
 
 - [QMK](https://github.com/qmk/qmk_firmware/) for AVR devices.
-- [MK32](https://github.com/Galzai/MK32) somewhat of a port of QMK for ESP32.
+- [MK32](https://github.com/Galzai/MK32) a QMK style firmware for ESP32 devices.
