@@ -41,6 +41,7 @@ static const char *TAG = "main";
 static bool DEEP_SLEEP = true;
 
 static uint8_t mode = TOGGLE_BLE;
+static char runtime_stats[1000];
 
 
 /* --------- Local Functons --------- */
@@ -158,7 +159,7 @@ void deep_sleep_task(void *pvParameters) {
                 ESP_LOGW(TAG, "Deep sleep triggered");
 
                 // deinits
-                if (BLE_ENABLED && (mode == TOGGLE_BLE) && (ble_deinit() != ESP_OK)) {
+                if (BLE_ENABLED && (mode == TOGGLE_BLE) && (ble__deinit() != ESP_OK)) {
                     ESP_LOGE(TAG, "Unable to go to sleep!");
                     DEEP_SLEEP = false;
                     continue;                    
@@ -232,14 +233,14 @@ void event_handler_task(void *parameters) {
                         if (BLE_ENABLED) {
                             ESP_LOGI(TAG, "Toggle BLE");
                             mode = event.data;
-                            ble_init();
+                            ble__init();
                         }
                     }
                     else if ((event.data == TOGGLE_USB)) {
                         // ESP_LOGW(TAG, "event toggle usb");
                         usb_connected = usb__is_connected();
                         if (BLE_ENABLED) {
-                            ble_deinit();
+                            ble__deinit();
                         }
                         if (USB_ENABLED) {
                             if (usb_connected) {
@@ -394,7 +395,7 @@ void app_main(void) {
         mode = toggle_switch__get_state();
     }
     if (BLE_ENABLED && (mode == TOGGLE_BLE)) {
-        ble_init();
+        ble__init();
     }
     if (USB_ENABLED && (mode == TOGGLE_USB)) {
         usb__init();

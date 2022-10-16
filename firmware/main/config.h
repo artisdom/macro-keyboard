@@ -19,18 +19,26 @@
 
 
 /* --------- BLE configs --------- */
-#define BLE_DEVICE_NAME         "Macro Keyboard"
+#define BLE_DEVICE_NAME         DEVICE_NAME
 #define BLE_ENABLED             (1)
 #define HID_REPORT_LEN          (8)
 #define HID_CC_REPORT_LEN       (2)
 #define BLE_NUM_HOSTS           (3)
 
 
+/* --------- USB configs --------- */
+#define USB_ENABLED             (1)
+#define USB_DETECT_ENABLED      (1)   // detect cable plugged in
+#define USB_MANUFACTURER_NAME   "Patopest"
+#define USB_DEVICE_NAME         DEVICE_NAME
+#define USB_CDC_NAME            DEVICE_NAME " CDC"
+#define USB_MIDI_NAME           DEVICE_NAME " MIDI"
+
+
 /* --------- Global configs --------- */
+#define DEVICE_NAME             "Macro Keyboard"
 #define DEEP_SLEEP_ENABLED      (0)
 #define DEEP_SLEEP_TIMEOUT      (120) // in seconds 
-#define USB_ENABLED             (0)   // enable hid over usb
-#define USB_DETECT_ENABLED      (1)   // detect cable plugged in
 #define TOGGLE_SWITCH_ENABLED   (1)
 #define BATTERY_ENABLED         (1)
 
@@ -66,7 +74,9 @@
 #define BLE_EVENT_TASK_STACK            (4096)
 #define BLE_EVENT_TASK_PRIORITY         (configMAX_PRIORITIES)
 
-#define USB_KEYBOARD_TASK_STACK         (2048)
+#define USB_TINYUSB_TASK_STACK          (4096)
+#define USB_TINYUSB_TASK_PRIORITY       (5)
+#define USB_KEYBOARD_TASK_STACK         (4096)
 #define USB_KEYBOARD_TASK_PRIORITY      (configMAX_PRIORITIES)
 #define USB_MEDIA_TASK_STACK            (2048)
 #define USB_MEDIA_TASK_PRIORITY         (configMAX_PRIORITIES)

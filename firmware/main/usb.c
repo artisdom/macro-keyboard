@@ -6,7 +6,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "tinyusb.h"
-#include "tusb_tasks.h"
+#include "tinyusb_types.h"
 #include "class/hid/hid_device.h"
 #include "driver/gpio.h"
 #include "driver/rtc_io.h"
@@ -19,6 +19,7 @@
 
 
 /* --------- Global Variables --------- */
+TaskHandle_t xUSB_tinyusb_task;
 TaskHandle_t xUSB_keyboard_task;
 TaskHandle_t xUSB_media_task;
 
@@ -29,6 +30,17 @@ QueueHandle_t usb_media_q;
 
 
 /* --------- Local Defines --------- */
+/*
+ * A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
+ * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
+ *
+ * Auto ProductID layout's Bitmap:
+ *   [MSB]         HID | MSC | CDC          [LSB]
+ */
+#define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
+#define USB_TUSB_PID (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
+    _PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
+
 #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
 #define HID_ITF_PROTOCOL_CONSUMER   (3)
 
@@ -39,7 +51,38 @@ QueueHandle_t usb_media_q;
 /* --------- Local Variables --------- */
 static const char *TAG = "usb";
 
-static bool run_tasks = true;
+static bool initialized = false;
+
+static const tusb_desc_device_t descriptor_tinyusb = {
+    .bLength = sizeof(descriptor_tinyusb),      // Size of this descriptor in bytes.
+    .bDescriptorType = TUSB_DESC_DEVICE,        // DEVICE Descriptor Type.
+    .bcdUSB = 0x0200,                           // BUSB Specification Release Number in Binary-Coded Decimal (i.e., 2.10 is 210H).
+
+    .bDeviceClass = TUSB_CLASS_MISC,            // Class code (assigned by the USB-IF).
+    .bDeviceSubClass = MISC_SUBCLASS_COMMON,    // Subclass code (assigned by the USB-IF).
+    .bDeviceProtocol = MISC_PROTOCOL_IAD,       // Protocol code (assigned by the USB-IF).
+    .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,  // Maximum packet size for endpoint zero (only 8, 16, 32, or 64 are valid). For HS devices is fixed to 64.
+
+    .idVendor = USB_ESPRESSIF_VID,              // Vendor ID (assigned by the USB-IF).
+    .idProduct = USB_TUSB_PID,                  // Product ID (assigned by the manufacturer).
+    .bcdDevice = 0x0100,                        // Device release number in binary-coded decimal.
+    .iManufacturer = 0x01,                      // Index of string descriptor describing manufacturer.
+    .iProduct = 0x02,                           // Index of string descriptor describing product.
+    .iSerialNumber = 0x03,                      // Index of string descriptor describing the device's serial number.
+
+    .bNumConfigurations = 0x01                  // Number of possible configurations.
+};
+
+// array of pointer to string descriptors
+static tusb_desc_strarray_device_t string_descriptor = {
+    (char[]){0x09, 0x04},                       // 0: supported language is English (0x0409)
+    USB_MANUFACTURER_NAME,                      // 1: Manufacturer
+    USB_DEVICE_NAME,                            // 2: Product
+    "123456",                                   // 3: Serials, should use chip ID
+    USB_CDC_NAME,                               // 4: CDC Interface
+    "",                                         // 5: MSC Interface
+    USB_MIDI_NAME                               // 6: MIDI
+};
 
 static const uint8_t hid_report_descriptor[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_ITF_PROTOCOL_KEYBOARD)),
@@ -94,45 +137,59 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 
 
 
-
 void usb__init() {
+    esp_err_t ret;
 
     ESP_LOGI(TAG, "Init USB");
-    tinyusb_config_t tusb_cfg = {
-        .device_descriptor = NULL,
-        .string_descriptor = NULL,
-        .external_phy = false,
-        .configuration_descriptor = hid_configuration_descriptor,
-    };
 
-    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+    if (initialized == false) {
+        tinyusb_config_t tusb_cfg = {
+            .device_descriptor = &descriptor_tinyusb,
+            .string_descriptor = string_descriptor,
+            .external_phy = false,
+            .configuration_descriptor = hid_configuration_descriptor,
+        };
+
+        ret = tinyusb_driver_install(&tusb_cfg);
+        if (ret) {
+            ESP_LOGE(TAG, "install tinyusb driver failed");
+            return;
+        }
+        initialized = true;
+    }
     tud_connect();
 
     usb_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
     usb_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));
 
+    xTaskCreatePinnedToCore(usb__tinyusb_task, "usb_tinyusb_task", USB_TINYUSB_TASK_STACK, NULL, USB_TINYUSB_TASK_PRIORITY, &xUSB_tinyusb_task, 0);
     xTaskCreatePinnedToCore(usb__keyboard_task, "usb_keyboard_task", USB_KEYBOARD_TASK_STACK, NULL, USB_KEYBOARD_TASK_PRIORITY, &xUSB_keyboard_task, 0);
     xTaskCreatePinnedToCore(usb__media_task, "usb_media_task", USB_MEDIA_TASK_STACK, NULL, USB_MEDIA_TASK_PRIORITY, &xUSB_media_task, 0);
 }
 
 
 esp_err_t usb__deinit() {
-    esp_err_t ret;
+    esp_err_t ret = ESP_OK;
 
     ESP_LOGI(TAG, "Deinit USB");
 
-    run_tasks = false; // used to stop all USB tasks
+    tud_disconnect();
 
-    bool dis = tud_disconnect();
-    if (dis) {
-        ESP_LOGE(TAG, "usb disconnect failed");
-        return dis;
+    ESP_LOGI(TAG, "Deleting USB tasks");
+    if (xUSB_tinyusb_task != NULL) {
+        ESP_LOGW(TAG, "Stopping tinyusb task");
+        vTaskDelete(xUSB_tinyusb_task);
+        xUSB_tinyusb_task = NULL;
     }
-
-    ret = tusb_stop_task();
-    if (ret) {
-        ESP_LOGE(TAG, "stop tusb task failed");
-        return ret;
+    if (xUSB_keyboard_task != NULL) {
+        ESP_LOGW(TAG, "Stopping keyboard task");
+        vTaskDelete(xUSB_keyboard_task);
+        xUSB_keyboard_task = NULL;
+    }
+    if (xUSB_media_task != NULL) {
+        ESP_LOGW(TAG, "Stopping media task");
+        vTaskDelete(xUSB_media_task);
+        xUSB_media_task = NULL;
     }
 
     ESP_LOGI(TAG, "Deleting USB queues");
@@ -146,6 +203,16 @@ esp_err_t usb__deinit() {
 
 
 
+void usb__tinyusb_task(void *pvParameters){
+
+    ESP_LOGI(TAG, "Starting tinyusb task");
+
+    while (1) {
+        tud_task();
+    }
+}
+
+
 void usb__keyboard_task(void *pvParameters) {
 
     uint8_t report[HID_REPORT_LEN];
@@ -157,18 +224,24 @@ void usb__keyboard_task(void *pvParameters) {
         xQueueReset(usb_keyboard_q);
     }
 
-    while (run_tasks) {
+    while (1) {
         //check if queue is initialized
         if (usb_keyboard_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
             if (xQueueReceive(usb_keyboard_q, &report, (TickType_t) 100)) {
                 //if we are not connected, discard.
                 if (tud_ready()) {
-                    ESP_LOGD(TAG, "HID report:  %d,%d, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
-                    report[0], report[1], report[2], report[3],
-                    report[4], report[5], report[6], report[7]);
+                    // ESP_LOGD(TAG, "HID report:  %d,%d, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x",
+                    // report[0], report[1], report[2], report[3],
+                    // report[4], report[5], report[6], report[7]);
 
                     tud_hid_keyboard_report(HID_ITF_PROTOCOL_KEYBOARD, report[0], &(report[2]));
+                }
+                else {
+                    ESP_LOGD(TAG, "Tinyusb ready: %d", tud_ready());
+                    ESP_LOGD(TAG, "Tinyusb connected: %d", tud_connected());
+                    ESP_LOGD(TAG, "Tinyusb mounted: %d", tud_mounted());
+                    ESP_LOGD(TAG, "Tinyusb suspended: %d", tud_suspended());
                 }
             }
         }
@@ -195,7 +268,7 @@ void usb__media_task(void *pvParameters) {
         xQueueReset(usb_media_q);
     }
 
-    while (run_tasks) {
+    while (1) {
         //check if queue is initialized
         if (usb_media_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.

@@ -59,7 +59,6 @@ static const char *TAG = "ble_hid";
 
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
-static bool run_tasks = true;
 
 static uint8_t current_host_id = 0;
 static bt_host_t current_host;
@@ -100,22 +99,22 @@ static esp_ble_adv_params_t hidd_adv_params = {
 
 
 /* --------- Local Function --------- */
-static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param);
-static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-static esp_err_t ble_start_advertising(esp_ble_adv_params_t *adv_params);
+static void ble__hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param);
+static void ble__gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+static esp_err_t ble__start_advertising(esp_ble_adv_params_t *adv_params);
 
-static void ble_set_host(uint8_t host_id);
-static void ble_set_host_adv_params(bt_host_t host);
+static void ble__set_host(uint8_t host_id);
+static void ble__set_host_adv_params(bt_host_t host);
 
-static uint8_t ble_get_last_host();
-static void ble_set_last_host(uint8_t host_id);
+static uint8_t ble__get_last_host();
+static void ble__set_last_host(uint8_t host_id);
 
-static void ble_change_host(uint8_t host_id);
-static void ble_save_host(bt_host_t host);
+static void ble__change_host(uint8_t host_id);
+static void ble__save_host(bt_host_t host);
 
 
 
-static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param) {
+static void ble__hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param) {
     switch(event) {
         case ESP_HIDD_EVENT_REG_FINISH: {
             if (param->init_finish.state == ESP_HIDD_INIT_OK) {
@@ -139,7 +138,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
         case ESP_HIDD_EVENT_BLE_DISCONNECT: {
             sec_conn = false;
             ESP_LOGI(TAG, "ESP_HIDD_EVENT_BLE_DISCONNECT");
-            ble_start_advertising(&hidd_adv_params);
+            ble__start_advertising(&hidd_adv_params);
             break;
         }
         case ESP_HIDD_EVENT_BLE_VENDOR_REPORT_WRITE_EVT: {
@@ -153,10 +152,10 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 }
 
 
-static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param){
+static void ble__gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param){
     switch (event) {
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
-        ble_start_advertising(&hidd_adv_params);
+        ble__start_advertising(&hidd_adv_params);
         break;
      case ESP_GAP_BLE_SEC_REQ_EVT:
         for(int i = 0; i < ESP_BD_ADDR_LEN; i++) {
@@ -176,11 +175,13 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
         ESP_LOGI(TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
         if(!param->ble_security.auth_cmpl.success) {
             ESP_LOGE(TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
+            sec_conn = false;
+            break;
         }
 
         // only save if address is Public or Random
         if (host.type <= BLE_ADDR_TYPE_RANDOM) {
-            ble_save_host(host);
+            ble__save_host(host);
         }
         else {
             ESP_LOGW(TAG, "Unable to save host in memory as the addr type is %d", host.type);
@@ -200,7 +201,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 
 // wrapper to call ble internal api and send an event to main event handler
-static esp_err_t ble_start_advertising(esp_ble_adv_params_t *adv_params) {
+static esp_err_t ble__start_advertising(esp_ble_adv_params_t *adv_params) {
 
     event_t event;
 
@@ -218,16 +219,16 @@ static esp_err_t ble_start_advertising(esp_ble_adv_params_t *adv_params) {
 }
 
 
-static uint8_t ble_get_last_host() {
+static uint8_t ble__get_last_host() {
     return memory__get_bluetooth_last_host();
 }
 
-static void ble_set_last_host(uint8_t host_id) {
+static void ble__set_last_host(uint8_t host_id) {
     memory__set_bluetooth_last_host(host_id);
 }
 
 
-static void ble_set_host_adv_params(bt_host_t host) {
+static void ble__set_host_adv_params(bt_host_t host) {
 
     memcpy(hidd_adv_params.peer_addr, host.addr, sizeof(host.addr));
     hidd_adv_params.peer_addr_type = host.type;
@@ -244,7 +245,7 @@ static void ble_set_host_adv_params(bt_host_t host) {
 }
 
 
-static void ble_set_host(uint8_t host_id) {
+static void ble__set_host(uint8_t host_id) {
 
     bt_host_t host;
 
@@ -254,12 +255,12 @@ static void ble_set_host(uint8_t host_id) {
     current_host = host;
     current_host_id = host_id;
 
-    ble_set_host_adv_params(host);
+    ble__set_host_adv_params(host);
 
 }
 
 
-static void ble_change_host(uint8_t host_id) {
+static void ble__change_host(uint8_t host_id) {
     esp_err_t ret;
     bt_host_t previous_host = current_host;
 
@@ -273,7 +274,7 @@ static void ble_change_host(uint8_t host_id) {
         return;
     }
 
-    ble_set_host(host_id);
+    ble__set_host(host_id);
     
     ret = esp_ble_gap_disconnect(previous_host.addr);
     if (ret) {
@@ -281,35 +282,33 @@ static void ble_change_host(uint8_t host_id) {
         return;
     }
 
-    ret = ble_start_advertising(&hidd_adv_params);
+    ret = ble__start_advertising(&hidd_adv_params);
     if (ret) {
         ESP_LOGE(TAG, "gap start advertising failed");
         return;
     }
 }
 
-static void ble_save_host(bt_host_t host) {
+static void ble__save_host(bt_host_t host) {
     ESP_LOGI(TAG, "Saving host at id %d", current_host_id);
 
     if (memcmp(&current_host, &host, sizeof(bt_host_t)) != 0) {
         ESP_LOGD(TAG, "Host is different, saving....");
         memory__set_bluetooth_host(current_host_id, host);
-        ble_set_host_adv_params(host);
+        ble__set_host_adv_params(host);
     }
     else {
         ESP_LOGD(TAG, "Host is the same, not saving");
     }
-    ble_set_last_host(current_host_id);
+    ble__set_last_host(current_host_id);
 }
 
 
 
-void ble_init(void) {
+void ble__init(void) {
     esp_err_t ret;
 
     ESP_LOGI(TAG, "Init BLE");
-
-    run_tasks = true;
 
     // Create queues
     ble_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
@@ -359,12 +358,12 @@ void ble_init(void) {
 
     // set host to connect to
     // current_host_id = memory__get_bluetooth_last_host();
-    current_host_id = ble_get_last_host();
-    ble_set_host(current_host_id);
+    current_host_id = ble__get_last_host();
+    ble__set_host(current_host_id);
 
     // register the callback function to the gap module
-    esp_ble_gap_register_callback(gap_event_handler);
-    esp_hidd_register_callbacks(hidd_event_callback);
+    esp_ble_gap_register_callback(ble__gap_event_handler);
+    esp_hidd_register_callbacks(ble__hidd_event_callback);
 
     /* set the security iocap & auth_req & key size & init key response key parameters to the stack*/
     esp_ble_auth_req_t auth_req = ESP_LE_AUTH_BOND;     //bonding with peer device after authentication
@@ -383,19 +382,39 @@ void ble_init(void) {
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
 
     // Create tasks
-    xTaskCreatePinnedToCore(ble_keyboard_task, "ble_keyboard_task", BLE_KEYBOARD_TASK_STACK, NULL, BLE_KEYBOARD_TASK_PRIORITY, &xBLE_keyboard_task, 0);
-    xTaskCreatePinnedToCore(ble_media_task, "ble_media_task", BLE_MEDIA_TASK_STACK, NULL, BLE_MEDIA_TASK_PRIORITY, &xBLE_media_task, 0);
-    xTaskCreatePinnedToCore(ble_battery_task, "ble_battery_task", BLE_BATTERY_TASK_STACK, NULL, BLE_BATTERY_TASK_PRIORITY, &xBLE_battery_task, 0);
-    xTaskCreatePinnedToCore(ble_event_task, "ble_event_task", BLE_EVENT_TASK_STACK, NULL, BLE_EVENT_TASK_PRIORITY, &xBLE_event_task, 0);
+    xTaskCreatePinnedToCore(ble__keyboard_task, "ble_keyboard_task", BLE_KEYBOARD_TASK_STACK, NULL, BLE_KEYBOARD_TASK_PRIORITY, &xBLE_keyboard_task, 0);
+    xTaskCreatePinnedToCore(ble__media_task, "ble_media_task", BLE_MEDIA_TASK_STACK, NULL, BLE_MEDIA_TASK_PRIORITY, &xBLE_media_task, 0);
+    xTaskCreatePinnedToCore(ble__battery_task, "ble_battery_task", BLE_BATTERY_TASK_STACK, NULL, BLE_BATTERY_TASK_PRIORITY, &xBLE_battery_task, 0);
+    xTaskCreatePinnedToCore(ble__event_task, "ble_event_task", BLE_EVENT_TASK_STACK, NULL, BLE_EVENT_TASK_PRIORITY, &xBLE_event_task, 0);
 }
 
 
-esp_err_t ble_deinit() {
+esp_err_t ble__deinit() {
     esp_err_t ret;
 
     ESP_LOGI(TAG, "Deinit BLE");
 
-    run_tasks = false; // used to stop all BLE tasks
+    ESP_LOGI(TAG, "Deleting BLE tasks");
+    if (xBLE_keyboard_task != NULL) {
+        ESP_LOGW(TAG, "Stopping keyboard task");
+        vTaskDelete(xBLE_keyboard_task);
+        xBLE_keyboard_task = NULL;
+    }
+    if (xBLE_media_task != NULL) {
+        ESP_LOGW(TAG, "Stopping media task");
+        vTaskDelete(xBLE_media_task);
+        xBLE_media_task = NULL;
+    }
+    if (xBLE_battery_task != NULL) {
+        ESP_LOGW(TAG, "Stopping battery task");
+        vTaskDelete(xBLE_battery_task);
+        xBLE_battery_task = NULL;
+    }
+    if (xBLE_event_task != NULL) {
+        ESP_LOGW(TAG, "Stopping event task");
+        vTaskDelete(xBLE_event_task);
+        xBLE_event_task = NULL;
+    }
 
     ret = esp_hidd_profile_deinit();
     if (ret) {
@@ -445,7 +464,7 @@ esp_err_t ble_deinit() {
 
 
 
-void ble_keyboard_task(void *pvParameters) {
+void ble__keyboard_task(void *pvParameters) {
 
     uint8_t report[HID_REPORT_LEN];
 
@@ -456,7 +475,7 @@ void ble_keyboard_task(void *pvParameters) {
         xQueueReset(ble_keyboard_q);
     }
 
-    while (run_tasks) {
+    while (1) {
         //check if queue is initialized
         if (ble_keyboard_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
@@ -480,7 +499,7 @@ void ble_keyboard_task(void *pvParameters) {
 }
 
 
-void ble_media_task(void *pvParameters) {
+void ble__media_task(void *pvParameters) {
 
     uint8_t report[HID_CC_REPORT_LEN];
 
@@ -491,7 +510,7 @@ void ble_media_task(void *pvParameters) {
         xQueueReset(ble_media_q);
     }
 
-    while (run_tasks) {
+    while (1) {
         //check if queue is initialized
         if (ble_media_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
@@ -515,7 +534,7 @@ void ble_media_task(void *pvParameters) {
 }
 
 
-void ble_battery_task(void *pvParameters) {
+void ble__battery_task(void *pvParameters) {
 
     uint8_t battery_report;
 
@@ -526,7 +545,7 @@ void ble_battery_task(void *pvParameters) {
         xQueueReset(ble_battery_q);
     }
 
-    while(run_tasks) {
+    while(1) {
         //check if queue is initialized
         if (ble_media_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
@@ -551,7 +570,7 @@ void ble_battery_task(void *pvParameters) {
 }
 
 
-void ble_event_task(void *pvParameters) {
+void ble__event_task(void *pvParameters) {
 
     // only BT host id change for now
     bt_event_t event;
@@ -564,7 +583,7 @@ void ble_event_task(void *pvParameters) {
         xQueueReset(ble_event_q);
     }
 
-    while (run_tasks) {
+    while (1) {
         //check if queue is initialized
         if (ble_event_q != NULL) {
                 //pend on MQ, if timeout triggers, just wait again.
@@ -573,15 +592,15 @@ void ble_event_task(void *pvParameters) {
                     switch (event.type) {
                         case BT_EVENT_CHANGE_HOST: {
                             ESP_LOGD(TAG, "Event: Change host");
-                            ble_change_host(event.host_id);
+                            ble__change_host(event.host_id);
                             break;
                         }
                         case BT_EVENT_RESET_HOST: {
                             ESP_LOGD(TAG, "Event: Reset host");
                             memset(&host, 0x00, sizeof(bt_host_t));
-                            // ble_save_host(host);
+                            // ble__save_host(host);
                             memory__set_bluetooth_host(event.host_id, host);
-                            ble_change_host(event.host_id);
+                            ble__change_host(event.host_id);
                             break;
                         }
                         default: {

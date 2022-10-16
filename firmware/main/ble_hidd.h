@@ -36,13 +36,13 @@ typedef struct bt_event_s {
 } bt_event_t;
 
 
-void ble_init(void);
-esp_err_t ble_deinit(void);
+void ble__init();
+esp_err_t ble__deinit();
 
-void ble_keyboard_task(void *pvParameters);
-void ble_media_task(void *pvParameters);
-void ble_battery_task(void *pvParameters);
-void ble_event_task(void *pvParameters);
+void ble__keyboard_task(void *pvParameters);
+void ble__media_task(void *pvParameters);
+void ble__battery_task(void *pvParameters);
+void ble__event_task(void *pvParameters);
 
 
 

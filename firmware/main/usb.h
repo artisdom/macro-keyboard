@@ -7,6 +7,7 @@
 #include "freertos/queue.h"
 
 // Tasks
+extern TaskHandle_t xUSB_tinyusb_task;
 extern TaskHandle_t xUSB_keyboard_task;
 extern TaskHandle_t xUSB_media_task;
 
@@ -17,8 +18,9 @@ extern QueueHandle_t usb_media_q;
 
 // USB device
 void usb__init();
-esp_err_t usb__deinit(void);
+esp_err_t usb__deinit();
 
+void usb__tinyusb_task(void *pvParameters);
 void usb__keyboard_task(void *pvParameters);
 void usb__media_task(void *pvParameters);
 
