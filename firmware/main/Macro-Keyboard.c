@@ -41,7 +41,6 @@ static const char *TAG = "main";
 static bool DEEP_SLEEP = true;
 
 static uint8_t mode = TOGGLE_BLE;
-static char runtime_stats[1000];
 
 
 /* --------- Local Functons --------- */
@@ -199,6 +198,7 @@ void event_handler_task(void *parameters) {
 
     while(1) {
         event_t event;
+        event_t new_event;
         memset(&event, 0x00, sizeof(event_t));
 
         if(xQueueReceive(event_q, &event, portMAX_DELAY)) {
@@ -232,6 +232,11 @@ void event_handler_task(void *parameters) {
                         }
                         if (BLE_ENABLED) {
                             ESP_LOGI(TAG, "Toggle BLE");
+                            if (LED_ENABLED && LED_EFFECTS_ENABLED) {
+                                new_event.type = EVENT_LEDS_BT_EFFECT_TOGGLE,
+                                new_event.data = true;
+                                xQueueSend(leds_q, &new_event, (TickType_t) 0);
+                            }
                             mode = event.data;
                             ble__init();
                         }
@@ -240,6 +245,11 @@ void event_handler_task(void *parameters) {
                         // ESP_LOGW(TAG, "event toggle usb");
                         usb_connected = usb__is_connected();
                         if (BLE_ENABLED) {
+                            if (LED_ENABLED && LED_EFFECTS_ENABLED) {
+                                new_event.type = EVENT_LEDS_BT_EFFECT_TOGGLE,
+                                new_event.data = false;
+                                xQueueSend(leds_q, &new_event, (TickType_t) 0);
+                            }
                             ble__deinit();
                         }
                         if (USB_ENABLED) {
@@ -277,7 +287,7 @@ void event_handler_task(void *parameters) {
                 case EVENT_LEDS_BT_ADV:
                 case EVENT_LEDS_BT_ADV_ALL:
                 case EVENT_LEDS_BT_CONNECTED: {
-                    if (LED_ENABLED && LED_EFFECTS_ENABLED) {
+                    if (LED_ENABLED && LED_BT_EFFECTS_ENABLED) {
                         ESP_LOGI(TAG, "Leds BT event");
                         xQueueSend(leds_q, &event, (TickType_t) 0);
                     }

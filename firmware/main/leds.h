@@ -12,7 +12,6 @@ void leds__decrease_brightness();
 
 void leds__update_effect_position(uint8_t position[2]);
 
-// void leds__handle_event(event_t event);
 void leds__task(void *pvParameters);
 
 

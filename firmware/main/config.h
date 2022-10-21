@@ -46,6 +46,7 @@
 /* --------- Led matrix configs --------- */
 #define LED_ENABLED             (1)
 #define LED_EFFECTS_ENABLED     (1)
+#define LED_BT_EFFECTS_ENABLED  (1)
 #define LED_ROWS                (3)
 #define LED_COLS                (3)
 
