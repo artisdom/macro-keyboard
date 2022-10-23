@@ -13,6 +13,7 @@ A Macro keyboard built on ESP32-S3.
 - Support for multiple BLE hosts and specific key layout to switch between them.
 - LED backlight with brightness control + effects for BLE actions
 
+
 ## Requirements
 
 ### Firmware
@@ -23,9 +24,48 @@ Using esp-idf (master branch)
 
 Using Kicad v6.0
 
+
+## Build
+
+See the esp-idf [instructions](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/get-started/index.html) on getting started.
+
+
+To build:
+
+```shell
+idf.py build
+```
+
+To flash:
+
+```shell
+idf.py flash [-p port_name]
+```
+
+To get a console:
+
+```shell
+idf.py monitor [-p port_name]
+```
+
+
+### Keyboard Configuration
+
+Each keyboard is defined in it's own subdirectory in the [keyboards](./firmware/keyboards) directory.
+This keyboards directory is actually registered as a esp-idf component and will be built as a library and then linked with the [main](./firmware/main) component.
+
+To choose which keyboard to compile for:
+
+```shell
+idf.py menuconfig
+```
+then `Keyboard Configuration` > `Keyboard to build`: Enter the name of the subdirectory for your keyboard.
+
+
+
 ## Todo
 
-- Put BLE stuff in it's own component/folder.
+- Cleanup BLE files.
 - Create an HID level to create packets to be routed to BLE or USB later on.
 - QMK features:
 	- Make keymap fully compatible with QMK (maybe use the [QMK configurator](https://github.com/qmk/qmk_configurator) or the web api to compile keymaps).

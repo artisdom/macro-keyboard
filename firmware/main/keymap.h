@@ -1,4 +1,4 @@
-#ifndef KEYMAP_h
+#ifndef KEYMAP_H
 #define KEYMAP_H
 
 #include <stdint.h>

@@ -1,14 +1,21 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/* --------- Global configs --------- */
+#define DEVICE_NAME             "Macro Keyboard Dev"
+#define DEEP_SLEEP_ENABLED      (0)
+#define DEEP_SLEEP_TIMEOUT      (120) // in seconds 
+#define TOGGLE_SWITCH_ENABLED   (1)
+#define BATTERY_ENABLED         (1)
+
 
 /* --------- Key matrix configs --------- */
 #define MATRIX_ROWS             (4)
 #define MATRIX_COLS             (3)
 
-#define DEBOUNCE_TIME           (4)  //in ms
+#define DEBOUNCE_TIME           (4)  // in ms
 
-#define KEYBOARD_RATE           (1u) //in ms
+#define KEYBOARD_RATE           (1u) // in ms
 
 
 /* --------- Keymap configs --------- */
@@ -33,14 +40,6 @@
 #define USB_DEVICE_NAME         DEVICE_NAME
 #define USB_CDC_NAME            DEVICE_NAME " CDC"
 #define USB_MIDI_NAME           DEVICE_NAME " MIDI"
-
-
-/* --------- Global configs --------- */
-#define DEVICE_NAME             "Macro Keyboard"
-#define DEEP_SLEEP_ENABLED      (0)
-#define DEEP_SLEEP_TIMEOUT      (120) // in seconds 
-#define TOGGLE_SWITCH_ENABLED   (1)
-#define BATTERY_ENABLED         (1)
 
 
 /* --------- Led matrix configs --------- */

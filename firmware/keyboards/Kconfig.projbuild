@@ -1,0 +1,9 @@
+menu "Keyboard Configuration"
+
+    config KEYBOARD_DIR
+        string "Keyboard to build"
+        default "default"
+        help
+            Keyboard to build for. Found as a subdirectory of the keyboards component.
+
+endmenu

@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "keymap.h"
 #include "config.h"
 #include "key_definitions.h"
@@ -24,19 +26,6 @@ enum layers {
     BT_RST,
     LEDS,
 };
-
-
-// To be moved to other file, once project supports multi-keyboards
-#define LAYOUT( \
-    K32,   K00, K01, K02, \
-    K31,   K10, K11, K12, \
-    K30,   K20, K21, K22  \
-  ) { \
-    { K00, K01, K02 }, \
-    { K10, K11, K12 }, \
-    { K20, K21, K22 }, \
-    { K30, K31, K32 }  \
-}
 
 
 #define _______ KC_TRNS
