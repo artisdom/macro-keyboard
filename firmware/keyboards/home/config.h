@@ -2,52 +2,54 @@
 #define CONFIG_H
 
 /* --------- Global configs --------- */
-#define DEVICE_NAME             "Macro Keyboard"
-#define DEEP_SLEEP_ENABLED      (1)
-#define DEEP_SLEEP_TIMEOUT      (120) // in seconds 
-#define TOGGLE_SWITCH_ENABLED   (1)
-#define BATTERY_ENABLED         (1)
+#define DEVICE_NAME               "Macro Keyboard"
+#define DEEP_SLEEP_ENABLED        (1)
+#define DEEP_SLEEP_TIMEOUT        (120) // in seconds 
+#define TOGGLE_SWITCH_ENABLED     (1)
+#define BATTERY_ENABLED           (1)
 
 
 /* --------- Key matrix configs --------- */
-#define MATRIX_ROWS             (4)
-#define MATRIX_COLS             (3)
+#define MATRIX_ROWS               (4)
+#define MATRIX_COLS               (3)
 
-#define DEBOUNCE_TIME           (4)  // in ms
+#define DEBOUNCE_TIME             (4)  // in ms
 
-#define KEYBOARD_RATE           (1u) // in ms
+#define KEYBOARD_RATE             (1u) // in ms
 
 
 /* --------- Keymap configs --------- */
-#define DEFAULT_LAYER           (0)
-#define MAX_LAYER               (32)
+#define DEFAULT_LAYER             (0)
+#define MAX_LAYER                 (32)
 
-#define MACRO_LEN               (3)
+#define MACRO_LEN                 (3)
 
 
 /* --------- BLE configs --------- */
-#define BLE_DEVICE_NAME         DEVICE_NAME
-#define BLE_ENABLED             (1)
-#define HID_REPORT_LEN          (8)
-#define HID_CC_REPORT_LEN       (2)
-#define BLE_NUM_HOSTS           (3)
+#define BLE_DEVICE_NAME           DEVICE_NAME
+#define BLE_ENABLED               (1)
+#define HID_REPORT_LEN            (8)
+#define HID_CC_REPORT_LEN         (2)
+#define BLE_NUM_HOSTS             (3)
 
 
 /* --------- USB configs --------- */
-#define USB_ENABLED             (1)
-#define USB_DETECT_ENABLED      (1)   // detect cable plugged in
-#define USB_MANUFACTURER_NAME   "Patopest"
-#define USB_DEVICE_NAME         DEVICE_NAME
-#define USB_CDC_NAME            DEVICE_NAME " CDC"
-#define USB_MIDI_NAME           DEVICE_NAME " MIDI"
+#define USB_ENABLED               (1)
+#define USB_DETECT_ENABLED        (1)   // detect cable plugged in
+#define USB_MANUFACTURER_NAME     "Patopest"
+#define USB_DEVICE_NAME           DEVICE_NAME
+#define USB_HID_NAME              DEVICE_NAME " HID"
+#define USB_CDC_NAME              DEVICE_NAME " CDC"
+#define USB_MIDI_NAME             DEVICE_NAME " MIDI"
 
 
 /* --------- Led matrix configs --------- */
-#define LED_ENABLED             (1)
-#define LED_EFFECTS_ENABLED     (1)
-#define LED_BT_EFFECTS_ENABLED  (1)
-#define LED_ROWS                (3)
-#define LED_COLS                (3)
+#define LED_ENABLED               (1)
+#define LED_EFFECTS_ENABLED       (1)
+#define LED_BT_EFFECTS_ENABLED    (1)
+#define LED_LAYER_EFFECTS_ENABLED (1)
+#define LED_ROWS                  (3)
+#define LED_COLS                  (3)
 
 
 

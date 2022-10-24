@@ -1,12 +1,12 @@
 #define LOG_LOCAL_LEVEL     ESP_LOG_DEBUG
 
-// #include "esp_system.h"
 #include "esp_log.h"
 
 #include "layers.h"
 #include "config.h"
 #include "keymap.h"
 #include "key_definitions.h"
+#include "events.h"
 
 
 /* --------- Local Variables --------- */
@@ -18,6 +18,7 @@ static uint32_t layer_state;
 
 
 /* --------- Local Functions --------- */
+static void layers__send_event();
 static void layers__debug_stack();
 
 
@@ -48,12 +49,14 @@ void layers__deactivate_all() {
 
 void layers__activate_layer(uint8_t layer) {
     layer_state |= (1 << layer);
+    layers__send_event();
     layers__debug_stack();
 }
 
 
 void layers__deactivate_layer(uint8_t layer) {
     layer_state &= ~(1 << layer);
+    layers__send_event();
     layers__debug_stack();
 }
 
@@ -66,6 +69,7 @@ void layers__toggle_layer(uint8_t layer) {
     else {
         layer_state |= (1 << layer); // activate
     }
+    layers__send_event();
     layers__debug_stack();
 }
 
@@ -87,6 +91,15 @@ uint16_t layers__get_keycode(uint8_t row, uint8_t col) {
     }
 
     return keycode;
+}
+
+
+static void layers__send_event() {
+    event_t event = {
+        .type = EVENT_LAYERS_CHANGED,
+        .data = layer_state & 0xFF,
+    };
+    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
 }
 
 

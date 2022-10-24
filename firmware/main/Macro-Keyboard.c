@@ -286,9 +286,10 @@ void event_handler_task(void *parameters) {
                 }
                 case EVENT_LEDS_BT_ADV:
                 case EVENT_LEDS_BT_ADV_ALL:
-                case EVENT_LEDS_BT_CONNECTED: {
+                case EVENT_LEDS_BT_CONNECTED:
+                case EVENT_LAYERS_CHANGED: {
                     if (LED_ENABLED && LED_BT_EFFECTS_ENABLED) {
-                        ESP_LOGI(TAG, "Leds BT event");
+                        ESP_LOGI(TAG, "Leds FX event");
                         xQueueSend(leds_q, &event, (TickType_t) 0);
                     }
                     break;
@@ -349,10 +350,10 @@ static void logging_init() {
     esp_log_level_set("layers", ESP_LOG_INFO);
     esp_log_level_set("memory", ESP_LOG_INFO);
     esp_log_level_set("leds", ESP_LOG_INFO);
-    esp_log_level_set("toggle_switch", ESP_LOG_DEBUG);
+    esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("battery", ESP_LOG_DEBUG);
-    esp_log_level_set("usb", ESP_LOG_DEBUG);
-    esp_log_level_set("ble_hid", ESP_LOG_DEBUG);
+    esp_log_level_set("usb", ESP_LOG_INFO);
+    esp_log_level_set("ble_hid", ESP_LOG_INFO);
     esp_log_level_set("hid_le_prf", ESP_LOG_INFO);
 
 }

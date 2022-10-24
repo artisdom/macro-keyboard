@@ -1,6 +1,7 @@
 #ifndef MACRO_KEYBOARD_H
 #define MACRO_KEYBOARD_H
 
+#include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
 // Contains declarations used by the event handler task
@@ -15,6 +16,7 @@ typedef enum event_type_e {
     EVENT_LEDS_BT_CONNECTED,
     EVENT_LEDS_BT_EFFECT_TOGGLE,
     EVENT_USB_PORT,
+    EVENT_LAYERS_CHANGED,
 
     EVENT_MAX = 0xFF,
 } event_type_t;

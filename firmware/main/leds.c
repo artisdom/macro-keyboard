@@ -349,6 +349,23 @@ void leds__task(void *pvParameters) {
                         new_effect.type = NONE;
                     }
                     break;
+                case EVENT_LAYERS_CHANGED:
+                    if (LED_LAYER_EFFECTS_ENABLED) {
+                        ESP_LOGD(TAG, "Led Event layer changed effect: 0x%x", event.data);
+                        for (uint8_t i = 8; i != 0; i--) {
+                            if ((event.data >> (i-1)) & 1) {
+                                uint8_t row_id = (i-1) / LED_ROWS;
+                                uint8_t col_id = (i-1) % LED_COLS;
+                                // ESP_LOGD(TAG, "row: %d col: %d", row_id, col_id);
+                                new_effect.type = STATIC;
+                                new_effect.row_gpio = row_gpios[row_id];
+                                new_effect.col_channel = col_channels[col_id];
+                                counter = 0;
+                                break;
+                            }
+                        }
+                    }
+                    break;
                 default:
                     ESP_LOGW(TAG, "Unhandled LED event type");
             }
