@@ -47,21 +47,25 @@ void layers__deactivate_all() {
 }
 
 
-void layers__activate_layer(uint8_t layer) {
+void layers__activate_layer(uint8_t layer, bool send_event) {
     layer_state |= (1 << layer);
-    layers__send_event();
+    if (send_event) {
+        layers__send_event();
+    }
     layers__debug_stack();
 }
 
 
-void layers__deactivate_layer(uint8_t layer) {
+void layers__deactivate_layer(uint8_t layer, bool send_event) {
     layer_state &= ~(1 << layer);
-    layers__send_event();
+    if (send_event) {
+        layers__send_event();
+    }
     layers__debug_stack();
 }
 
 
-void layers__toggle_layer(uint8_t layer) {
+void layers__toggle_layer(uint8_t layer, bool send_event) {
     uint32_t layer_active = layer_state & (1 << layer);
     if (layer_active) {
         layer_state &= ~(1 << layer); // deactivate
@@ -69,7 +73,9 @@ void layers__toggle_layer(uint8_t layer) {
     else {
         layer_state |= (1 << layer); // activate
     }
-    layers__send_event();
+    if (send_event) {
+        layers__send_event();
+    }
     layers__debug_stack();
 }
 

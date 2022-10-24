@@ -8,6 +8,8 @@
 #include "tinyusb.h"
 #include "tinyusb_types.h"
 #include "class/hid/hid_device.h"
+#include "tusb_cdc_acm.h"
+#include "tusb_console.h"
 #include "driver/gpio.h"
 #include "driver/rtc_io.h"
 #include "esp_sleep.h"
@@ -42,10 +44,28 @@ QueueHandle_t usb_media_q;
     _PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
 
 #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
+// #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
 #define HID_ITF_PROTOCOL_CONSUMER   (3)
 
 #define ESP_INTR_FLAG_DEFAULT       (0)
 #define USB_GPIO_DEBOUNCE_TIME      (4000) // in us
+
+
+/* --------- Local Declarations --------- */
+enum {
+    ITF_NUM_HID = 0,
+    ITF_NUM_CDC,
+    ITF_NUM_CDC_DATA,
+    ITF_NUM_TOTAL
+};
+
+enum {
+    // Available USB Endpoints: 5 IN/OUT EPs and 1 IN EP
+    EP_EMPTY = 0,
+    EPNUM_0_HID,
+    EPNUM_1_CDC_NOTIF,
+    EPNUM_1_CDC,
+};
 
 
 /* --------- Local Variables --------- */
@@ -79,8 +99,8 @@ static tusb_desc_strarray_device_t string_descriptor = {
     USB_MANUFACTURER_NAME,                      // 1: Manufacturer
     USB_DEVICE_NAME,                            // 2: Product
     "123456",                                   // 3: Serials, should use chip ID
-    USB_CDC_NAME,                               // 4: CDC Interface
-    "",                                         // 5: MSC Interface
+    USB_HID_NAME,                               // 4: HID Interface
+    USB_CDC_NAME,                               // 5: CDC Interface
     USB_MIDI_NAME                               // 6: MIDI
 };
 
@@ -88,12 +108,15 @@ static const uint8_t hid_report_descriptor[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_ITF_PROTOCOL_KEYBOARD)),
     TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_ITF_PROTOCOL_CONSUMER))
 };
-static const uint8_t hid_configuration_descriptor[] = {
+static const uint8_t configuration_descriptor[] = {
     // Configuration number, interface count, string index, total length, attribute, power in mA
-    TUD_CONFIG_DESCRIPTOR(1, 1, 0, TUSB_DESC_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, TUSB_DESC_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
     // Interface number, string index, boot protocol, report descriptor len, EP In address, size & polling interval
-    TUD_HID_DESCRIPTOR(0, 0, false, sizeof(hid_report_descriptor), 0x81, 16, 10),
+    TUD_HID_DESCRIPTOR(ITF_NUM_HID, 4, false, sizeof(hid_report_descriptor), 0x80 | EPNUM_0_HID, 16, 10),
+
+    // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+    // TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 5, 0x80 | EPNUM_1_CDC_NOTIF, 8, EPNUM_1_CDC, 0x80 | EPNUM_1_CDC, CFG_TUD_CDC_EP_BUFSIZE),
 };
 
 static const gpio_num_t usb_bus_gpio = GPIO_NUM_21;
@@ -147,7 +170,9 @@ void usb__init() {
             .device_descriptor = &descriptor_tinyusb,
             .string_descriptor = string_descriptor,
             .external_phy = false,
-            .configuration_descriptor = hid_configuration_descriptor,
+            .configuration_descriptor = configuration_descriptor,
+            .self_powered = true,
+            .vbus_monitor_io = GPIO_NUM_33,
         };
 
         ret = tinyusb_driver_install(&tusb_cfg);
@@ -156,6 +181,26 @@ void usb__init() {
             return;
         }
         initialized = true;
+
+        // tinyusb_config_cdcacm_t acm_cfg = {
+        //     .usb_dev = TINYUSB_USBDEV_0,
+        //     .cdc_port = TINYUSB_CDC_ACM_0,
+        //     .rx_unread_buf_sz = 64,
+        //     .callback_rx = NULL,
+        //     .callback_rx_wanted_char = NULL,
+        //     .callback_line_state_changed = NULL,
+        //     .callback_line_coding_changed = NULL,
+        // };
+        // ret = tusb_cdc_acm_init(&acm_cfg);
+        // if (ret) {
+        //     ESP_LOGE(TAG, "init CDC ACM driver failed");
+        // }
+        // else {
+        //     ret = esp_tusb_init_console(TINYUSB_CDC_ACM_0);
+        //     if (ret) {
+        //         ESP_LOGE(TAG, "init console to redirect output to CDC failed");
+        //     }
+        // }
     }
     tud_connect();
 

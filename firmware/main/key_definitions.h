@@ -441,33 +441,29 @@ enum hid_mouse_keycodes {
 };
 
 
-/* NOTE: in order to not overlap with keyboard keycodes, all these keycodes are in the 0x100 range
+/* NOTE: in order to not overlap with keyboard keycodes, all these keycodes are in the 0x2000 range
 but & 0xFF will yield the spec keycode */
-#define KC_CC_OFFSET    (0x100)
-
-#define KC_MEDIA        KC_CC_POWER
-#define KC_MEDIA_MAX    KC_CC_VOL_DOWN
 
 enum hid_consumer_control_keycodes {
 
-    KC_CC_POWER = 0x130,
+    KC_CC_POWER = 0x2030,
     KC_CC_RESET,
     KC_CC_SLEEP,
 
-    KC_CC_MENU = 0x140,
+    KC_CC_MENU = 0x2040,
 
-    KC_CC_SELECTION = 0x180,
+    KC_CC_SELECTION = 0x2080,
     KC_CC_ASSIGN_SEL,
     KC_CC_MODE_STEP,
     KC_CC_RECALL_LAST,
 
-    KC_CC_QUIT = 0x194,
+    KC_CC_QUIT = 0x2094,
     KC_CC_HELP,
 
-    KC_CC_CHANNEL_UP = 0x19C,
+    KC_CC_CHANNEL_UP = 0x209C,
     KC_CC_CHANNEL_DOWN,
 
-    KC_CC_PLAY = 0x1B0,
+    KC_CC_PLAY = 0x20B0,
     KC_CC_PAUSE,
     KC_CC_RECORD,
     KC_CC_FAST_FORWARD,
@@ -481,16 +477,16 @@ enum hid_consumer_control_keycodes {
     KC_CC_ENTER_DISK,
     KC_CC_REPEAT,
 
-    KC_CC_STOP_EJECT = 0x1CC,
+    KC_CC_STOP_EJECT = 0x20CC,
     KC_CC_PLAY_PAUSE,
     KC_CC_PLAY_SKIP,
 
-    KC_CC_VOLUME = 0x1E0,
+    KC_CC_VOLUME = 0x20E0,
     KC_CC_BALANCE,
     KC_CC_MUTE,
     KC_CC_BASS,
 
-    KC_CC_VOL_UP = 0x1E9,
+    KC_CC_VOL_UP = 0x20E9,
     KC_CC_VOL_DOWN,
 };
 
@@ -518,8 +514,11 @@ enum internal_special_keycodes {
     QK_RGUI                 = 0x1800,
     QK_MODS_MAX             = 0x1FFF,
 
-    QK_MACRO                = 0x2000,    
-    QK_MACRO_MAX            = 0x20FF,
+    QK_MEDIA                = 0x2000,
+    QK_MEDIA_MAX            = 0x20FF,
+
+    QK_MACRO                = 0x3000,    
+    QK_MACRO_MAX            = 0x30FF,
 
     QK_TO                   = 0x5000,
     QK_TO_MAX               = 0x50FF,

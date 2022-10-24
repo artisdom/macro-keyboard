@@ -80,21 +80,21 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
         switch (keycode) {
             case QK_TOGGLE_LAYER ... QK_TOGGLE_LAYER_MAX:
                 if (keystate == KEY_DOWN) {
-                    layers__toggle_layer(keycode & 0xFF);
+                    layers__toggle_layer(keycode & 0xFF, true);
                 }
                 break;
             case QK_TO ... QK_TO_MAX:
                 if (keystate == KEY_DOWN) {
                     layers__deactivate_all();
-                    layers__activate_layer(keycode & 0xFF);
+                    layers__activate_layer(keycode & 0xFF, true);
                 }
                 break;
             case QK_MOMENTARY ... QK_MOMENTARY_MAX:
                 if (keystate == KEY_DOWN) {
-                    layers__activate_layer(keycode & 0xFF);
+                    layers__activate_layer(keycode & 0xFF, false);
                 }
                 else { // KEY_UP
-                    layers__deactivate_layer(keycode & 0xFF);
+                    layers__deactivate_layer(keycode & 0xFF, false);
                 }
                 break;
             case QK_DEF_LAYER ... QK_DEF_LAYER_MAX:
@@ -135,7 +135,7 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
 static void keyboard__handle_media(uint16_t keycode, uint8_t keystate) {
 
     uint8_t media_state[HID_CC_REPORT_LEN] = { 0 };
-    media_state[0] = keycode - KC_CC_OFFSET;
+    media_state[0] = keycode & 0xFF;
     media_state[1] = keystate;
 
     xQueueSend(media_q, (void*) &media_state, (TickType_t) 0);
@@ -213,7 +213,7 @@ uint8_t *keyboard__check_state() {
                 }
 
                 // media controls
-                if (keycode >= KC_MEDIA && keycode <= KC_MEDIA_MAX) {
+                if (keycode >= QK_MEDIA && keycode <= QK_MEDIA_MAX) {
                     keyboard__handle_media(keycode, keystate);
                     continue;
                 }
@@ -260,7 +260,7 @@ uint8_t *keyboard__check_state() {
                 }
 
                 // media controls
-                if (keycode >= KC_MEDIA && keycode <= KC_MEDIA_MAX) {
+                if (keycode >= QK_MEDIA && keycode <= QK_MEDIA_MAX) {
                     keyboard__handle_media(keycode, keystate);
                     continue;
                 }
