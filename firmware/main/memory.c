@@ -7,7 +7,7 @@
 
 #include "memory.h"
 #include "config.h"
-#include "ble_hidd.h"
+#include "ble.h"
 
 
 /* --------- Local Variables --------- */

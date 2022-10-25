@@ -18,7 +18,7 @@
 #include "events.h"
 #include "toggle_switch.h"
 #include "battery.h"
-#include "ble_hidd.h"
+#include "ble.h"
 #include "usb.h"
 
 
@@ -204,7 +204,7 @@ void event_handler_task(void *parameters) {
         if(xQueueReceive(event_q, &event, portMAX_DELAY)) {
             
             switch(event.type) {
-                case EVENT_BT_CHANGE_HOST: {
+                case EVENT_KB_CHANGE_BT_HOST: {
                     bt_event.type = BT_EVENT_CHANGE_HOST;
                     bt_event.host_id = event.data;
 
@@ -214,7 +214,7 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
-                case EVENT_BT_RESET_HOST: {
+                case EVENT_KB_RESET_BT_HOST: {
                     bt_event.type = BT_EVENT_RESET_HOST;
                     bt_event.host_id = event.data;
 
@@ -233,7 +233,7 @@ void event_handler_task(void *parameters) {
                         if (BLE_ENABLED) {
                             ESP_LOGI(TAG, "Toggle BLE");
                             if (LED_ENABLED && LED_EFFECTS_ENABLED) {
-                                new_event.type = EVENT_LEDS_BT_EFFECT_TOGGLE,
+                                new_event.type = EVENT_BT_LEDS_EFFECT_TOGGLE,
                                 new_event.data = true;
                                 xQueueSend(leds_q, &new_event, (TickType_t) 0);
                             }
@@ -246,7 +246,7 @@ void event_handler_task(void *parameters) {
                         usb_connected = usb__is_connected();
                         if (BLE_ENABLED) {
                             if (LED_ENABLED && LED_EFFECTS_ENABLED) {
-                                new_event.type = EVENT_LEDS_BT_EFFECT_TOGGLE,
+                                new_event.type = EVENT_BT_LEDS_EFFECT_TOGGLE,
                                 new_event.data = false;
                                 xQueueSend(leds_q, &new_event, (TickType_t) 0);
                             }
@@ -271,7 +271,7 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
-                case EVENT_LEDS_BRIGHTNESS: {
+                case EVENT_KB_LEDS_BRIGHTNESS: {
                     if (LED_ENABLED) {
                         if (event.data == 0) {
                             ESP_LOGI(TAG, "Leds increase brightness");
@@ -284,9 +284,9 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
-                case EVENT_LEDS_BT_ADV:
-                case EVENT_LEDS_BT_ADV_ALL:
-                case EVENT_LEDS_BT_CONNECTED:
+                case EVENT_BT_ADV:
+                case EVENT_BT_ADV_ALL:
+                case EVENT_BT_CONNECTED:
                 case EVENT_LAYERS_CHANGED: {
                     if (LED_ENABLED && LED_BT_EFFECTS_ENABLED) {
                         ESP_LOGI(TAG, "Leds FX event");

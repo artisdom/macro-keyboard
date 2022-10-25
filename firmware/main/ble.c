@@ -27,7 +27,7 @@
 #include "esp_hidd_prf_api.h"
 #include "hid_dev.h"
 
-#include "ble_hidd.h"
+#include "ble.h"
 #include "config.h"
 #include "memory.h"
 #include "events.h"
@@ -188,7 +188,7 @@ static void ble__gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_
         }
 
         event_t event = {
-            .type = EVENT_LEDS_BT_CONNECTED,
+            .type = EVENT_BT_CONNECTED,
             .data = current_host_id,
         };
         xQueueSend(event_q, (void *) &event, (TickType_t) 0);
@@ -206,10 +206,10 @@ static esp_err_t ble__start_advertising(esp_ble_adv_params_t *adv_params) {
     event_t event;
 
     if (adv_params->peer_addr[0] == 0) { // terrible check
-        event.type = EVENT_LEDS_BT_ADV_ALL;
+        event.type = EVENT_BT_ADV_ALL;
     }
     else {
-        event.type = EVENT_LEDS_BT_ADV;
+        event.type = EVENT_BT_ADV;
     }
     // event.type = EVENT_LEDS_BT_ADV;
     event.data = current_host_id;

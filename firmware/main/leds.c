@@ -317,7 +317,7 @@ void leds__task(void *pvParameters) {
             xQueueReceive(leds_q, &event, 0);
 
             switch (event.type) {
-                case EVENT_LEDS_BT_ADV:
+                case EVENT_BT_ADV:
                     if (bt_effect_enabled) {
                         ESP_LOGD(TAG, "Led Event adv -> slow pulse");
                         new_effect.type = SLOW_PULSE;
@@ -325,7 +325,7 @@ void leds__task(void *pvParameters) {
                         new_effect.col_channel = col_channels[effect_position[1]];
                     }
                     break;
-                 case EVENT_LEDS_BT_ADV_ALL:
+                 case EVENT_BT_ADV_ALL:
                     if (bt_effect_enabled) {
                         ESP_LOGD(TAG, "Led Event adv all -> fast pulse");
                         new_effect.type = FAST_PULSE;
@@ -333,7 +333,7 @@ void leds__task(void *pvParameters) {
                         new_effect.col_channel = col_channels[effect_position[1]];
                     }
                     break;
-                case EVENT_LEDS_BT_CONNECTED:
+                case EVENT_BT_CONNECTED:
                     if (bt_effect_enabled) {
                         ESP_LOGD(TAG, "Led Event connected -> static");
                         new_effect.type = STATIC;
@@ -342,7 +342,7 @@ void leds__task(void *pvParameters) {
                         counter = 0;
                     }
                     break;
-                case EVENT_LEDS_BT_EFFECT_TOGGLE:
+                case EVENT_BT_LEDS_EFFECT_TOGGLE:
                     if (LED_BT_EFFECTS_ENABLED) {
                         ESP_LOGD(TAG, "Led Event toggle ble effects %d", event.data);
                         bt_effect_enabled = event.data;
