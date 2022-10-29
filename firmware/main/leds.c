@@ -151,7 +151,7 @@ static void leds__ledc_init(uint8_t pin, uint8_t col_id) {
 }
 
 
-static bool leds__fade_end_event_cb(const ledc_cb_param_t *param, void *arg) {
+static bool IRAM_ATTR leds__fade_end_event_cb(const ledc_cb_param_t *param, void *arg) {
 
     portBASE_TYPE taskAwoken = pdFALSE;
 

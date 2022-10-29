@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 /* --------- Global configs --------- */
-#define DEVICE_NAME               "Macro Keyboard Dev"
+#define DEVICE_NAME               "Macro Dev" // max 15 chars for macOS
 #define DEEP_SLEEP_ENABLED        (0)
 #define DEEP_SLEEP_TIMEOUT        (120) // in seconds 
 #define TOGGLE_SWITCH_ENABLED     (1)

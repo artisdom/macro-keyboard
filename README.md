@@ -86,6 +86,7 @@ then `Keyboard Configuration` > `Keyboard to build`: Enter the name of the subdi
 
 - Potential issue when switching BLE host: the hid report array is not propably reset.  
 Should not be an issue as BLE host changes are supposed to happen without other keys being pressed.
+- BLE local name needs to be less than 15 characters. Otherwise macOS will not show it in the discovery menu.
 
 
 ## Docs / Referencs

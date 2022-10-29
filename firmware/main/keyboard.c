@@ -101,18 +101,22 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                 layers__set_default_layer(keycode & 0xFF);
                 break;
             case QK_BT_HOST ... QK_BT_HOST_MAX:
-                event.type = EVENT_KB_CHANGE_BT_HOST;
-                event.data = keycode & 0xFF;
-                leds__update_effect_position(position);
-                xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                ESP_LOGD(TAG, "EVENT_BT_CHANGE_HOST %d", keycode & 0xFF);
+                if (keystate == KEY_DOWN) {
+                    event.type = EVENT_KB_CHANGE_BT_HOST;
+                    event.data = keycode & 0xFF;
+                    leds__update_effect_position(position);
+                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                    ESP_LOGD(TAG, "EVENT_BT_CHANGE_HOST %d", keycode & 0xFF);
+                }
                 break;
             case QK_BT_HOST_RESET ... QK_BT_HOST_RESET_MAX:
-                event.type = EVENT_KB_RESET_BT_HOST;
-                event.data = keycode & 0xFF;
-                leds__update_effect_position(position);
-                xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
+                if (keystate == KEY_DOWN) {
+                    event.type = EVENT_KB_RESET_BT_HOST;
+                    event.data = keycode & 0xFF;
+                    leds__update_effect_position(position);
+                    xQueueSend(event_q, (void *) &event, (TickType_t) 0);
+                    ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
+                }
                 break;
             case QK_BRIGHTNESS ... QK_BRIGHTNESS_MAX:
                 if (keystate == KEY_DOWN) {

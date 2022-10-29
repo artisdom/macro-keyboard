@@ -55,7 +55,7 @@ QueueHandle_t ble_event_q;
 
 
 /* --------- Local Variables --------- */
-static const char *TAG = "ble_hid";
+static const char *TAG = "ble";
 
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
@@ -118,7 +118,9 @@ static void ble__hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_para
     switch(event) {
         case ESP_HIDD_EVENT_REG_FINISH: {
             if (param->init_finish.state == ESP_HIDD_INIT_OK) {
-                //esp_bd_addr_t rand_addr = {0x04,0x11,0x11,0x11,0x11,0x05};
+                // esp_bd_addr_t rand_addr = {0x04,0x11,0x11,0x11,0x11,0x05};
+                // esp_ble_gap_set_rand_addr(rand_addr);
+                // esp_ble_gap_clear_whitelist();
                 esp_ble_gap_set_device_name(BLE_DEVICE_NAME);
                 esp_ble_gap_config_adv_data(&hidd_adv_data);
 
@@ -129,7 +131,7 @@ static void ble__hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_para
             break;
         }
         case ESP_HIDD_EVENT_DEINIT_FINISH:
-         break;
+            break;
         case ESP_HIDD_EVENT_BLE_CONNECT: {
             ESP_LOGI(TAG, "ESP_HIDD_EVENT_BLE_CONNECT");
             hid_conn_id = param->connect.conn_id;
@@ -194,7 +196,11 @@ static void ble__gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_
         xQueueSend(event_q, (void *) &event, (TickType_t) 0);
 
         break;
+    case ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT:
+        ESP_LOGI(TAG, "Removed bond device: %d "ESP_BD_ADDR_STR, param->remove_bond_dev_cmpl.status, ESP_BD_ADDR_HEX(param->remove_bond_dev_cmpl.bd_addr));
+        break;
     default:
+        // ESP_LOGD(TAG, "gap event handler: %d", *((int *)&event));
         break;
     }
 }
@@ -288,6 +294,7 @@ static void ble__change_host(uint8_t host_id) {
         return;
     }
 }
+
 
 static void ble__save_host(bt_host_t host) {
     ESP_LOGI(TAG, "Saving host at id %d", current_host_id);
@@ -586,29 +593,32 @@ void ble__event_task(void *pvParameters) {
     while (1) {
         //check if queue is initialized
         if (ble_event_q != NULL) {
-                //pend on MQ, if timeout triggers, just wait again.
-                if (xQueueReceive(ble_event_q, &event, (TickType_t) 100 )) {
+            //pend on MQ, if timeout triggers, just wait again.
+            if (xQueueReceive(ble_event_q, &event, (TickType_t) 100 )) {
 
-                    switch (event.type) {
-                        case BT_EVENT_CHANGE_HOST: {
-                            ESP_LOGD(TAG, "Event: Change host");
-                            ble__change_host(event.host_id);
-                            break;
-                        }
-                        case BT_EVENT_RESET_HOST: {
-                            ESP_LOGD(TAG, "Event: Reset host");
-                            memset(&host, 0x00, sizeof(bt_host_t));
-                            // ble__save_host(host);
-                            memory__set_bluetooth_host(event.host_id, host);
-                            ble__change_host(event.host_id);
-                            break;
-                        }
-                        default: {
-                            ESP_LOGW(TAG, "Unhandled event type");
-                            break;
-                        }
+                switch (event.type) {
+                    case BT_EVENT_CHANGE_HOST: {
+                        ESP_LOGD(TAG, "Event: Change host");
+                        ble__change_host(event.host_id);
+                        break;
+                    }
+                    case BT_EVENT_RESET_HOST: {
+                        ESP_LOGD(TAG, "Event: Reset host");
+                        // host = memory__get_bluetooth_host(event.host_id);
+                        // ESP_LOGD(TAG, "Removing bond device with addr: "ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(host.addr));
+                        // esp_ble_remove_bond_device(host.addr);
+
+                        memset(&host, 0x00, sizeof(bt_host_t));
+                        memory__set_bluetooth_host(event.host_id, host);
+                        ble__change_host(event.host_id);
+                        break;
+                    }
+                    default: {
+                        ESP_LOGW(TAG, "Unhandled event type");
+                        break;
                     }
                 }
+            }
         }
         else {
             ESP_LOGE(TAG, "ble_event queue not initialized, retry in 1s");
