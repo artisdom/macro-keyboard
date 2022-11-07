@@ -18,6 +18,7 @@
 #include "usb.h"
 #include "config.h"
 #include "events.h"
+#include "via.h"
 
 
 /* --------- Global Variables --------- */
@@ -43,19 +44,56 @@ QueueHandle_t usb_media_q;
 #define USB_TUSB_PID (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
     _PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
 
-#define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
+// #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
+#define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
 // #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
-#define HID_ITF_PROTOCOL_CONSUMER   (3)
+#define HID_REPORT_ID_KEYBOARD   (1)
+#define HID_REPORT_ID_CONSUMER   (2)
 
 #define ESP_INTR_FLAG_DEFAULT       (0)
 #define USB_GPIO_DEBOUNCE_TIME      (4000) // in us
 
+// Specific to VIA
+#define RAW_USAGE_PAGE           0xFF60
+#define RAW_USAGE_ID             0x61
+#define RAW_USAGE_ID_IN          0x62
+#define RAW_USAGE_ID_OUT         0x63
+
+#define RAW_REPORT_SIZE          32
+
+// HID Raw report descriptor
+// - 1st parameter is report size (mandatory)
+// - 2nd parameter is report id HID_REPORT_ID(n) (optional)
+#define TUD_HID_REPORT_DESC_RAW(report_size, ...) \
+    HID_USAGE_PAGE_N ( RAW_USAGE_PAGE, 2   ),\
+    HID_USAGE        ( RAW_USAGE_ID        ),\
+    HID_COLLECTION   ( HID_COLLECTION_APPLICATION ),\
+      /* Report ID if any */\
+      __VA_ARGS__ \
+      /* Input */ \
+      HID_USAGE       ( RAW_USAGE_ID_IN                        ),\
+      HID_LOGICAL_MIN ( 0x00                                   ),\
+      HID_LOGICAL_MAX_N ( 0xff, 2                              ),\
+      HID_REPORT_SIZE ( 8                                      ),\
+      HID_REPORT_COUNT( report_size                            ),\
+      HID_INPUT       ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),\
+      /* Output */ \
+      HID_USAGE       ( RAW_USAGE_ID_OUT                        ),\
+      HID_LOGICAL_MIN ( 0x00                                    ),\
+      HID_LOGICAL_MAX_N ( 0xff, 2                               ),\
+      HID_REPORT_SIZE ( 8                                       ),\
+      HID_REPORT_COUNT( report_size                             ),\
+      HID_OUTPUT      ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE  ),\
+    HID_COLLECTION_END \
+
 
 /* --------- Local Declarations --------- */
 enum {
+    // Interface numbers
     ITF_NUM_HID = 0,
-    ITF_NUM_CDC,
-    ITF_NUM_CDC_DATA,
+    ITF_NUM_HID_RAW,
+    // ITF_NUM_CDC,
+    // ITF_NUM_CDC_DATA,
     ITF_NUM_TOTAL
 };
 
@@ -63,8 +101,9 @@ enum {
     // Available USB Endpoints: 5 IN/OUT EPs and 1 IN EP
     EP_EMPTY = 0,
     EPNUM_0_HID,
-    EPNUM_1_CDC_NOTIF,
-    EPNUM_1_CDC,
+    EPNUM_1_HID,
+    // EPNUM_1_CDC_NOTIF,
+    // EPNUM_1_CDC,
 };
 
 
@@ -72,6 +111,7 @@ enum {
 static const char *TAG = "usb";
 
 static bool initialized = false;
+static const gpio_num_t usb_bus_gpio = GPIO_NUM_21;
 
 static const tusb_desc_device_t descriptor_tinyusb = {
     .bLength = sizeof(descriptor_tinyusb),      // Size of this descriptor in bytes.
@@ -105,9 +145,15 @@ static tusb_desc_strarray_device_t string_descriptor = {
 };
 
 static const uint8_t hid_report_descriptor[] = {
-    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_ITF_PROTOCOL_KEYBOARD)),
-    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_ITF_PROTOCOL_CONSUMER))
+    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD)),
+    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER))
 };
+
+static const uint8_t hid_raw_report_descriptor[] = {
+    TUD_HID_REPORT_DESC_RAW(RAW_REPORT_SIZE)
+};
+
+
 static const uint8_t configuration_descriptor[] = {
     // Configuration number, interface count, string index, total length, attribute, power in mA
     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, TUSB_DESC_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
@@ -115,11 +161,12 @@ static const uint8_t configuration_descriptor[] = {
     // Interface number, string index, boot protocol, report descriptor len, EP In address, size & polling interval
     TUD_HID_DESCRIPTOR(ITF_NUM_HID, 4, false, sizeof(hid_report_descriptor), 0x80 | EPNUM_0_HID, 16, 10),
 
+    // Interface number, string index, protocol, report descriptor len, EP OUT & IN address, size & polling interval
+    TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID_RAW, 4, false, sizeof(hid_raw_report_descriptor), EPNUM_1_HID, 0x80 | EPNUM_1_HID, 16, 10)
+
     // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
     // TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 5, 0x80 | EPNUM_1_CDC_NOTIF, 8, EPNUM_1_CDC, 0x80 | EPNUM_1_CDC, CFG_TUD_CDC_EP_BUFSIZE),
 };
-
-static const gpio_num_t usb_bus_gpio = GPIO_NUM_21;
 
 /* --------- Local Functions --------- */
 static void usb__init_gpio();
@@ -133,7 +180,18 @@ static void usb__gpio_isr_handler(void *arg);
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
 {
     // We use only one interface and one HID report descriptor, so we can ignore parameter 'instance'
-    return hid_report_descriptor;
+    // return hid_report_descriptor;
+    ESP_LOGD(TAG, "tud_hid_descriptor_report_cb with instance %d", instance);
+    if (instance == ITF_NUM_HID) {
+        return hid_report_descriptor;
+    }
+    else if (instance == ITF_NUM_HID_RAW) {
+        return hid_raw_report_descriptor;
+    }
+    else {
+        ESP_LOGW(TAG, "Unhandled interface number %d", instance);
+    }
+    return NULL;
 }
 
 // Invoked when received GET_REPORT control request
@@ -154,6 +212,16 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
 {
+    ESP_LOGD(TAG, "instance:%d report_id:%d report_type:%d, len:%d", instance, report_id, report_type, bufsize);
+    if (instance == ITF_NUM_HID_RAW) {
+        uint8_t *new_buffer = (uint8_t *) malloc(bufsize);
+        memcpy(new_buffer, buffer, bufsize); 
+        via__hid_receive(new_buffer, bufsize);
+
+        // send back modified buffer to host
+        tud_hid_n_report(ITF_NUM_HID_RAW, 0, new_buffer, bufsize);
+        free(new_buffer);
+    }
 }
 
 
@@ -280,7 +348,7 @@ void usb__keyboard_task(void *pvParameters) {
                     // report[0], report[1], report[2], report[3],
                     // report[4], report[5], report[6], report[7]);
 
-                    tud_hid_keyboard_report(HID_ITF_PROTOCOL_KEYBOARD, report[0], &(report[2]));
+                    tud_hid_keyboard_report(HID_REPORT_ID_KEYBOARD, report[0], &(report[2]));
                 }
                 else {
                     ESP_LOGD(TAG, "Tinyusb ready: %d", tud_ready());
@@ -326,7 +394,7 @@ void usb__media_task(void *pvParameters) {
                         cc_report[0] = report[0];
                     }
                     ESP_LOGD(TAG, "HID CC report:  %d,%d", cc_report[0], cc_report[1]);
-                    tud_hid_report(HID_ITF_PROTOCOL_CONSUMER, cc_report, HID_CC_REPORT_LEN);
+                    tud_hid_report(HID_REPORT_ID_CONSUMER, cc_report, HID_CC_REPORT_LEN);
                 }
             }
         }

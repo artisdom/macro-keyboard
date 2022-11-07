@@ -1,5 +1,5 @@
-#ifndef KEYMAP_H
-#define KEYMAP_H
+#ifndef LAYOUT_H
+#define LAYOUT_H
 
 
 #define LAYOUT( \

@@ -21,6 +21,8 @@ venv/
 # ESP-IDF
 sdkconfig*
 !sdkconfig.defaults
+managed_components
+dependencies.lock
 
 # WIP stuff
 not_components/

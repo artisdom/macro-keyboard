@@ -6,11 +6,16 @@
 #include "config.h"
 
 
-// Macro
-extern uint16_t macros[][MACRO_LEN];
+/* These are defined in keyboards/<name>/keymap.c */
 
-// layers
+// Macros
+extern const uint16_t macros[][MACRO_LEN];
+
+// Layers
 extern const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS];
+
+
+#include "keymap_introspection.h"
 
 
 #endif

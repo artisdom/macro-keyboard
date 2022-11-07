@@ -69,11 +69,12 @@ then `Keyboard Configuration` > `Keyboard to build`: Enter the name of the subdi
 - Create an HID level to create packets to be routed to BLE or USB later on (waiting on esp to finish their esp_hid component).
 - QMK features:
 	- Make keymap fully compatible with QMK (maybe use the [QMK configurator](https://github.com/qmk/qmk_configurator) or the web api to compile keymaps).
-	- Make keyboard compatible with VIA to change layouts and keymaps on the fly using NVS/EEPROM.
 	- Support for more Layer modifiers (one-shot, tap, etc...).
+    - Better VIA compatibility (even thought it's a custom fork).
 - Better NVS stuff (layouts, configs, ...etc).
 - Better Battery reports (when init ble connection use read level).
 - Low Battery management: indicator + shutdown.
+- Battery optimisations: reduce polling rate when on battery + light sleep + power profiling for leakage currents.
 - Clean up HID descriptors to make them common between USB and BLE stacks.
 - Better USB deinit (waiting on TinyUSB implementation).
 - USB CDC and HID device in parallel to get log outputs in serial port.

@@ -8,7 +8,6 @@
 #include "esp_log.h"
 
 #include "keyboard.h"
-#include "keymap.h"
 #include "key_definitions.h"
 #include "layers.h"
 #include "config.h"
@@ -195,7 +194,7 @@ uint8_t *keyboard__check_state() {
                         hid_report_key_index[row][col] = report_index;
 
                         for (uint8_t i = 0; i < MACRO_LEN; i++) {
-                            key = macros[macro_id][i];
+                            key = layers__get_macro_keycode(macro_id, i);
                             
                             uint8_t modifier = keyboard__check_modifier(key);
                             hid_report[0] |= modifier;
@@ -247,7 +246,7 @@ uint8_t *keyboard__check_state() {
                     uint8_t macro_id = keycode & 0xFF;
 
                     for (uint8_t i = 0; i < MACRO_LEN; i++) {
-                        key = macros[macro_id][i];
+                        key = layers__get_macro_keycode(macro_id, i);
                         uint8_t modifier = keyboard__check_modifier(key);
                         hid_report[0] &= ~modifier;
                         

@@ -566,6 +566,12 @@ enum internal_special_keycodes {
 #define RCMD(kc) RGUI(kc)
 #define RWIN(kc) RGUI(kc)
 
+// Modified keycode aliases
+#define C(kc) LCTL(kc)
+#define S(kc) LSFT(kc)
+#define A(kc) LALT(kc)
+#define G(kc) LGUI(kc)
+
 #define HYPR(kc) (QK_LCTL | QK_LSFT | QK_LALT | QK_LGUI | (kc))
 #define MEH(kc) (QK_LCTL | QK_LSFT | QK_LALT | (kc))
 #define LCAG(kc) (QK_LCTL | QK_LALT | QK_LGUI | (kc))

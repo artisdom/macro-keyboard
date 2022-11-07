@@ -7,6 +7,7 @@
 #define DEEP_SLEEP_TIMEOUT        (120) // in seconds 
 #define TOGGLE_SWITCH_ENABLED     (1)
 #define BATTERY_ENABLED           (1)
+#define VIA_ENABLED               (1)
 
 
 /* --------- Key matrix configs --------- */
@@ -14,7 +15,6 @@
 #define MATRIX_COLS               (3)
 
 #define DEBOUNCE_TIME             (4)  // in ms
-
 #define KEYBOARD_RATE             (1u) // in ms
 
 
@@ -23,6 +23,7 @@
 #define MAX_LAYER                 (32)
 
 #define MACRO_LEN                 (3)
+#define MAX_MACRO                 (16) // locked by VIA's crappy macro system
 
 
 /* --------- BLE configs --------- */

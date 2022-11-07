@@ -5,6 +5,7 @@
 #include "layers.h"
 #include "config.h"
 #include "keymap.h"
+#include "dynamic_keymap.h"
 #include "key_definitions.h"
 #include "events.h"
 
@@ -29,6 +30,10 @@ void layers__init() {
     default_layer_state = (1 << DEFAULT_LAYER);
 
     layer_state = default_layer_state;
+
+    if (VIA_ENABLED) {
+        dynamic_keymap__init();
+    }
 
     // ESP_LOG_BUFFER_HEX_LEVEL(TAG, &layer_state, sizeof(uint32_t), ESP_LOG_DEBUG);
     layers__debug_stack();
@@ -88,7 +93,13 @@ uint16_t layers__get_keycode(uint8_t row, uint8_t col) {
     for (int8_t i = MAX_LAYER - 1; i >= 0; i--) {
         uint32_t layer_active = layers & (1 << i);
         if (layer_active) {
-            keycode = keymaps[i][row][col];
+            if (VIA_ENABLED) {
+                keycode = dynamic_keymap__get_keycode(i, row, col);
+            }
+            else {
+                keycode = keymaps[i][row][col];
+            }
+
             if (keycode != KC_TRANSPARENT) {
                 ESP_LOGD(TAG, "Keycode 0x%x on layer %d", keycode, i);
                 break;
@@ -96,6 +107,18 @@ uint16_t layers__get_keycode(uint8_t row, uint8_t col) {
         }
     }
 
+    return keycode;
+}
+
+
+uint16_t layers__get_macro_keycode(uint8_t macro_id, uint8_t key_id) {
+    uint16_t keycode = KC_NO;
+    if (VIA_ENABLED) {
+        keycode = dynamic_keymap__get_macro_keycode(macro_id, key_id);
+    }
+    else {
+        keycode = macros[macro_id][key_id];
+    }
     return keycode;
 }
 

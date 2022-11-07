@@ -146,6 +146,60 @@ uint8_t memory__get_current_layer() {
 }
 
 
+// Keymaps / VIA
+void memory__set_via_layout_options(uint32_t options) {
+    ESP_LOGD(TAG, "Setting via layout options: %ld", options);
+    mem_set_u8(keyboard_handle, "via_layout_options", options);
+}
+
+
+uint32_t  memory__get_via_layout_options() {
+    uint32_t options = 0;
+    
+    ESP_LOGD(TAG, "Getting via layout options");
+    mem_get_u32(keyboard_handle, "via_layout_options", &options);
+
+    return options;
+}
+
+
+void memory__set_keymap_state(void *data, size_t length) {
+    ESP_LOGD(TAG, "Setting keymap state of size %d", length);
+    mem_set_blob(keyboard_handle, "keymap_state", data, length);
+}
+
+
+void memory__get_keymap_state(void *data, size_t length) {
+    ESP_LOGD(TAG, "Getting keymap state");
+    mem_get_blob(keyboard_handle, "keymap_state", data, length);
+}
+
+
+void memory__set_macros(void *data, size_t length) {
+    ESP_LOGD(TAG, "Setting macros of size %d", length);
+    mem_set_blob(keyboard_handle, "macros", data, length);
+}
+
+
+void memory__get_macros(void *data, size_t length) {
+    ESP_LOGD(TAG, "Getting macros state");
+    mem_get_blob(keyboard_handle, "macros", data, length);
+}
+
+
+void memory__set_keymaps(void *data, size_t length) {
+    ESP_LOGD(TAG, "Setting keymaps of size %d", length);
+    mem_set_blob(keyboard_handle, "keymaps", data, length);
+}
+
+
+void memory__get_keymaps(void *data, size_t length) {
+    ESP_LOGD(TAG, "Getting keymaps");
+    mem_get_blob(keyboard_handle, "keymaps", data, length);
+}
+
+
+
 // Bluetooth hosts
 void memory__set_bluetooth_host(uint8_t host_id, bt_host_t host) {
     char key[6] = "host0";

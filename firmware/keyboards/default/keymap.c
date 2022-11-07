@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "keymap.h"
+#include "layout.h"
 #include "config.h"
 #include "key_definitions.h"
 
@@ -11,7 +11,7 @@ enum macro_keycodes {
     PASTE,
 };
 
-uint16_t macros[][MACRO_LEN] = {
+const uint16_t macros[][MACRO_LEN] = {
     [COPY]  = { KC_LGUI, KC_C, KC_NO },
     [PASTE] = { KC_LGUI, KC_V, KC_NO },
 };
