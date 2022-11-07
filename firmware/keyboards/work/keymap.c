@@ -17,7 +17,7 @@ const uint16_t macros[][MACRO_LEN] = {
     [COPY]   = { KC_LGUI, KC_C },
     [PASTE]  = { KC_LGUI, KC_V },
     [MOOM]   = { KC_LSFT, KC_LGUI, KC_4 },
-    [SNITCH] = { LCAG(KC_M)},
+    [SNITCH] = { LCAG(KC_M) },
 };
 
 

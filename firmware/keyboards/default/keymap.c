@@ -9,11 +9,13 @@
 enum macro_keycodes {
     COPY,
     PASTE,
+    SNITCH,
 };
 
 const uint16_t macros[][MACRO_LEN] = {
     [COPY]  = { KC_LGUI, KC_C, KC_NO },
     [PASTE] = { KC_LGUI, KC_V, KC_NO },
+    [SNITCH] = { LCAG(KC_M) },
 };
 
 
@@ -35,8 +37,8 @@ enum layers {
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
         TO(BT),           KC_A,     KC_B,         KC_C,
-        TG(LAYER_1),    LSFT(KC_A), LSC(KC_DOWN), LAG(KC_DOWN),
-        xxxxxxx,          xxxxxxx,  RSC(KC_DOWN), xxxxxxx),
+        TG(LAYER_1),    LSFT(KC_A), LSC(KC_DOWN), M(SNITCH),
+        xxxxxxx,          xxxxxxx,  RSC(KC_DOWN), LAG(KC_DOWN)),
 
     [LAYER_1] = LAYOUT(
         TO(BT),           KC_AT,    KC_LPRN,  KC_RPRN,

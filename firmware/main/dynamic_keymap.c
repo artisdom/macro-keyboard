@@ -109,9 +109,11 @@ static inline uint16_t dynamic_keymap__get_keycode_index(uint8_t layer, uint8_t 
 
 
 void dynamic_keymap__reset() {
+    size_t static_macros_size = keymap__get_macro_count() * MACRO_LEN * sizeof(uint16_t);
+
     dynamic_keymap__save_macros((void *) &macros);
     memset(dyn_macros, 0x00, macros_size);
-    memcpy(dyn_macros, &macros, keymap__get_macro_count());
+    memcpy(dyn_macros, &macros, static_macros_size);
     dynamic_keymap__save_keymaps((void *) &keymaps);
     memcpy(dyn_keymaps, &keymaps, keymaps_size);
 }
@@ -197,6 +199,7 @@ void dynamic_keymap__layers_reset() {
 
 uint16_t dynamic_keymap__get_macro_keycode(uint8_t macro, uint8_t key) {
     uint16_t index = (macro * MACRO_LEN) + key;
+    ESP_LOGD(TAG, "Getting macro %d key: %d -> index: %d = 0x%x", macro, key, index, dyn_macros[index]);
     return dyn_macros[index];
 }
 
