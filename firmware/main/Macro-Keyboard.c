@@ -41,6 +41,7 @@ static const char *TAG = "main";
 static bool DEEP_SLEEP = true;
 
 static uint8_t mode = TOGGLE_BLE;
+static bool usb_connected;
 
 
 /* --------- Local Functons --------- */
@@ -75,7 +76,13 @@ void keyboard_task(void *parameters) {
             }
 
         }
-        vTaskDelay(KEYBOARD_RATE / portTICK_PERIOD_MS);
+
+        if (usb_connected == true) {
+            vTaskDelay(KEYBOARD_RATE / portTICK_PERIOD_MS);
+        }
+        else {
+            vTaskDelay(KEYBOARD_BLE_RATE / portTICK_PERIOD_MS);
+        }
     }
     vTaskDelete(NULL);
     
@@ -109,7 +116,12 @@ void media_task(void *pvParameters) {
             }    
         }
 
-        vTaskDelay(KEYBOARD_RATE / portTICK_PERIOD_MS);
+        if (usb_connected == true) {
+            vTaskDelay(KEYBOARD_RATE / portTICK_PERIOD_MS);
+        }
+        else {
+            vTaskDelay(KEYBOARD_BLE_RATE / portTICK_PERIOD_MS);
+        }
     }
     vTaskDelete(NULL);
 
@@ -187,7 +199,6 @@ void deep_sleep_task(void *pvParameters) {
 void event_handler_task(void *parameters) {
 
     bt_event_t bt_event;
-    bool usb_connected;
 
     ESP_LOGI(TAG, "Starting event handler task");
 
@@ -321,23 +332,6 @@ void event_handler_task(void *parameters) {
 
 static void logging_init() {
 
-    if (USB_ENABLED) {
-        // change UART default pins to reroute logs from USB pins
-        uart_config_t uart_config = {
-            .baud_rate = 115200,
-            .data_bits = UART_DATA_8_BITS,
-            .parity    = UART_PARITY_DISABLE,
-            .stop_bits = UART_STOP_BITS_1,
-            .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-            .source_clk = UART_SCLK_APB,
-        };
-
-        ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 2048, 2048, 0, NULL, 0));
-        ESP_ERROR_CHECK(uart_param_config(UART_NUM_0, &uart_config));
-        ESP_ERROR_CHECK(uart_set_pin(UART_NUM_0, 0, 21, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-
-    }
-
     // ESP-IDF modules
     esp_log_level_set("*", ESP_LOG_INFO);
     esp_log_level_set("ledc", ESP_LOG_INFO);
@@ -348,13 +342,13 @@ static void logging_init() {
     esp_log_level_set("matrix", ESP_LOG_INFO);
     esp_log_level_set("keyboard", ESP_LOG_INFO);
     esp_log_level_set("layers", ESP_LOG_INFO);
-    esp_log_level_set("dynamic_keymap", ESP_LOG_DEBUG);
-    esp_log_level_set("memory", ESP_LOG_DEBUG);
+    esp_log_level_set("dynamic_keymap", ESP_LOG_INFO);
+    esp_log_level_set("memory", ESP_LOG_INFO);
     esp_log_level_set("leds", ESP_LOG_INFO);
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("battery", ESP_LOG_INFO);
     esp_log_level_set("usb", ESP_LOG_DEBUG);
-    esp_log_level_set("via", ESP_LOG_DEBUG);
+    esp_log_level_set("via", ESP_LOG_INFO);
     esp_log_level_set("ble", ESP_LOG_INFO);
     esp_log_level_set("hid_le_prf", ESP_LOG_INFO);
 
@@ -416,6 +410,7 @@ void app_main(void) {
 
     if (USB_DETECT_ENABLED) {
         usb__init_detection();
+        usb_connected = usb__is_connected();
     }
 
     if (LED_ENABLED) {

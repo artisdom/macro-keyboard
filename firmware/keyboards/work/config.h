@@ -14,9 +14,9 @@
 #define MATRIX_ROWS               (4)
 #define MATRIX_COLS               (3)
 
-#define DEBOUNCE_TIME             (4)  // in ms
-
-#define KEYBOARD_RATE             (1u) // in ms
+#define DEBOUNCE_TIME             (4)   // in ms
+#define KEYBOARD_RATE             (1u)  // in ms
+#define KEYBOARD_BLE_RATE         (10u) // in ms
 
 
 /* --------- Keymap configs --------- */

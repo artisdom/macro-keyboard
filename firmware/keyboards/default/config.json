@@ -2,7 +2,7 @@
   "name": "Macro Dev",
   "vendorId": "0x303a",
   "productId": "0x4009",
-  "lighting": "qmk_backlight",
+  "keycodes": [ "qmk_lighting" ],
   "matrix": { "rows": 4, "cols": 3 },
   "layouts": {
     "keymap": [

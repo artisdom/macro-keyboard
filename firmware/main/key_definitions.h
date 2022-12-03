@@ -587,7 +587,7 @@ enum internal_special_keycodes {
 #define RSA(kc) (QK_RSFT | QK_RALT | (kc))
 #define LSC(kc) (QK_LSFT | QK_LCTL | (kc))
 #define RSC(kc) (QK_RSFT | QK_RCTL | (kc))
-#define RCS(kc)  RSC(kc) // to make it compatible with QMK's macro
+#define RCS(kc)  RSC(kc) // for uniformity with macro system
 #define SAGR(kc) RSA(kc)
 
 

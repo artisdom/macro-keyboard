@@ -57,6 +57,7 @@ QueueHandle_t ble_event_q;
 /* --------- Local Variables --------- */
 static const char *TAG = "ble";
 
+static bool initialized = false;
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
 
@@ -323,22 +324,15 @@ void ble__init(void) {
     ble_battery_q = xQueueCreate(32, sizeof(uint8_t));
     ble_event_q = xQueueCreate(32, sizeof(bt_event_t));
 
-    // Initialize NVS.
-    ret = nvs_flash_init();
+    // ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
-
-    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-    ret = esp_bt_controller_init(&bt_cfg);
-    if (ret) {
-        ESP_LOGE(TAG, "%s initialize controller failed\n", __func__);
-        return;
+    if (initialized == false) {
+        esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+        ret = esp_bt_controller_init(&bt_cfg);
+        if (ret) {
+            ESP_LOGE(TAG, "%s initialize controller failed\n", __func__);
+            return;
+        }
     }
 
     ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
@@ -347,10 +341,13 @@ void ble__init(void) {
         return;
     }
 
-    ret = esp_bluedroid_init();
-    if (ret) {
-        ESP_LOGE(TAG, "%s init bluedroid failed\n", __func__);
-        return;
+    if (initialized == false) {
+        ret = esp_bluedroid_init();
+        if (ret) {
+            ESP_LOGE(TAG, "%s init bluedroid failed\n", __func__);
+            return;
+        }
+        initialized = true;
     }
 
     ret = esp_bluedroid_enable();
@@ -435,21 +432,9 @@ esp_err_t ble__deinit() {
         return ret;
     }
 
-    ret = esp_bluedroid_deinit();
-    if (ret) {
-        ESP_LOGE(TAG, "deinit bluedroid failed");
-        return ret;
-    }
-
     ret = esp_bt_controller_disable();
     if (ret) {
         ESP_LOGE(TAG, "disable controller failed");
-        return ret;
-    }
-
-    ret = esp_bt_controller_deinit();
-    if (ret) {
-        ESP_LOGE(TAG, "deinit controller failed");
         return ret;
     }
 
