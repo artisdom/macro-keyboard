@@ -48,13 +48,13 @@ const uint16_t macros[][MACRO_LEN] = {
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
         TO(BT),           MACRO(MOOML),  xxxxxxx,      xxxxxxx,
-        TG(LAYER_1),      MACRO(COPY),   MACRO(PASTE), M(SNITCH),
+        TG(LAYER_MOOM),   MACRO(COPY),   MACRO(PASTE), M(SNITCH),
         xxxxxxx,          LCTL(KC_LEFT), KC_CC_PLAY,   LCTL(KC_RGHT)),
 
     [LAYER_MOOM] = LAYOUT(
         TO(BT),           KC_MOOM,       KC_SPC, M_FUSC,
         xxxxxxx,          LALT(KC_LEFT), KC_4,   LALT(KC_RGHT),
-        TG(LAYER_1),      LGUI(KC_LEFT), KC_1,   LGUI(KC_RGHT)),
+        TG(LAYER_MOOM),   LGUI(KC_LEFT), KC_1,   LGUI(KC_RGHT)),
 
     [LAYER_2] = LAYOUT(
         xxxxxxx,          xxxxxxx,  xxxxxxx,  xxxxxxx,
