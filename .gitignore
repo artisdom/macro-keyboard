@@ -21,6 +21,7 @@ venv/
 # ESP-IDF
 sdkconfig*
 !sdkconfig.defaults
+defconfig
 managed_components
 dependencies.lock
 
@@ -28,6 +29,7 @@ dependencies.lock
 not_components/
 MK32/
 qmk/
+scripts/
 
 
 # Kicad files

@@ -81,6 +81,7 @@ then `Keyboard Configuration` > `Keyboard to build`: Enter the name of the subdi
 - MIDI device?
 - Mutiple BLE hosts in parallel? + BLE 5 features?
 - If design is kept as BLE only, shift implementation to NimBLE stack (not Bluedroid).
+- SPI RAM usage? disabled for now because it was making boot time far too long.
 
 
 ## Issues

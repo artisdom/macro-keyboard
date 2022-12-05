@@ -588,6 +588,8 @@ enum internal_special_keycodes {
 #define LSC(kc) (QK_LSFT | QK_LCTL | (kc))
 #define RSC(kc) (QK_RSFT | QK_RCTL | (kc))
 #define RCS(kc)  RSC(kc) // for uniformity with macro system
+#define LCG(kc) (QK_LCTL | QK_LGUI | (kc))
+#define RCG(kc) (QK_RCTL | QK_RGUI | (kc))
 #define SAGR(kc) RSA(kc)
 
 
@@ -599,7 +601,7 @@ enum internal_special_keycodes {
 
 
 // Toggle layer - 256 layer max
-#define TG(layer) (QK_TOGGLE_LAYER | ((layer)&0xFF))
+#define TG(layer) (QK_TOGGLE_LAYER | ((layer) & 0xFF))
 
 // Toggle layer and deactivate all others - 256 layer max
 #define TO(layer) (QK_TO | ((layer) & 0xFF))
