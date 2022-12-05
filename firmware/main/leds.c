@@ -377,12 +377,14 @@ void leds__task(void *pvParameters) {
             else if (new_effect.type == NONE) {
                 leds__open_all();
             }
-            else if (effect.row_gpio != new_effect.row_gpio) {
-                leds__close_row(effect.row_gpio);
-                leds__open_row(new_effect.row_gpio);
-            }
-            else if (effect.col_channel != new_effect.col_channel) {
-                leds__close_columns();
+            else {
+                if (effect.row_gpio != new_effect.row_gpio) {
+                    leds__close_row(effect.row_gpio);
+                    leds__open_row(new_effect.row_gpio);
+                }
+                if (effect.col_channel != new_effect.col_channel) {
+                    leds__close_columns();
+                }
             }
 
             effect = new_effect;
