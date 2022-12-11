@@ -1,5 +1,6 @@
 #define LOG_LOCAL_LEVEL     ESP_LOG_DEBUG
 
+#include "esp_timer.h"
 #include "esp_log.h"
 
 #include "layers.h"
@@ -19,11 +20,19 @@ static uint32_t layer_state;
 
 // LLLL LSSS with layer num (5 bits) and state (3 bits)
 static uint8_t  oneshot_layer_state;
+static uint32_t oneshot_time;
 
 
 /* --------- Local Functions --------- */
 static void layers__send_event();
 static void layers__debug_stack();
+static inline uint32_t millis();
+
+
+
+static inline uint32_t millis() {
+    return esp_timer_get_time() / 1000;
+}
 
 
 void layers__init() {
@@ -32,7 +41,7 @@ void layers__init() {
 
     default_layer_state = (1 << DEFAULT_LAYER);
     layer_state = default_layer_state;
-    oneshot_layer_state = 0;
+    oneshot_layer_state = ONESHOT_INACTIVE;
 
     if (VIA_ENABLED) {
         dynamic_keymap__init();
@@ -91,13 +100,14 @@ void layers__toggle_layer(uint8_t layer, bool send_event) {
 void layers__set_oneshot_layer(uint8_t layer) {
     oneshot_layer_state = (layer << 3) | ONESHOT_START;
     layers__activate_layer(layer, false);
+    oneshot_time = millis();
 }
 
 
 void layers__clear_oneshot_layer() {
     uint8_t oneshot_layer = oneshot_layer_state >> 3;
     layers__deactivate_layer(oneshot_layer, false);
-    oneshot_layer_state = 0;
+    oneshot_layer_state = ONESHOT_INACTIVE;
 }
 
 
@@ -108,6 +118,16 @@ uint8_t layers__get_oneshot_state() {
 
 void layers__set_oneshot_state(uint8_t state) {
     oneshot_layer_state |= (state & 0b111);
+}
+
+
+bool layers__check_oneshot_timeout() {
+    if (layers__get_oneshot_state() != ONESHOT_INACTIVE) {
+        if ((millis() - oneshot_time) > (ONESHOT_TIMEOUT * 1000)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 

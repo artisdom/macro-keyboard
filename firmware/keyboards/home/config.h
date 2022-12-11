@@ -25,6 +25,7 @@
 
 #define MACRO_LEN                 (3)
 #define MAX_MACRO                 (16) // locked by VIA's crappy macro system
+#define ONESHOT_TIMEOUT           (3)  // in seconds
 
 
 /* --------- BLE configs --------- */

@@ -39,7 +39,7 @@ enum layers {
 const uint16_t macros[][MACRO_LEN] = {
     [COPY]   = { KC_LGUI, KC_C },
     [PASTE]  = { KC_LGUI, KC_V },
-    [MOOML]  = { TG(LAYER_MOOM), KC_MOOM },
+    [MOOML]  = { OSL(LAYER_MOOM), KC_MOOM },
     [SNITCH] = { LCAG(KC_M) },
 };
 

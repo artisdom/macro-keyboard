@@ -285,10 +285,15 @@ uint8_t *keyboard__check_state() {
                 continue;
             }
 
+            // check if oneshot has timed out before getting the keycode
+            if (layers__check_oneshot_timeout()) {
+                layers__clear_oneshot_layer();
+            }
+
             uint16_t keycode = keyboard__get_keycode(row, col);
             ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
 
-            // handle oneshot
+            // handle oneshot state changes
             if ((keystate == KEY_DOWN) && (layers__get_oneshot_state() == ONESHOT_START)) {
                 layers__set_oneshot_state(ONESHOT_PRESSED);
             }

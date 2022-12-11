@@ -25,11 +25,11 @@ static uint32_t debounce_matrix[MATRIX_ROWS][MATRIX_COLS] = {0};
 /* --------- Local Functions --------- */
 static void matrix__gpio_row_init(uint8_t pin);
 static void matrix__gpio_col_init(uint8_t pin);
-static uint32_t millis();
+static inline uint32_t millis();
 
 
 
-static uint32_t millis() {
+static inline uint32_t millis() {
     return esp_timer_get_time() / 1000;
 }
 
