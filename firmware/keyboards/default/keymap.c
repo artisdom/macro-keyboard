@@ -40,7 +40,7 @@ enum layers {
 const uint16_t macros[][MACRO_LEN] = {
     [COPY]   = { KC_LGUI, KC_C, KC_NO },
     [PASTE]  = { KC_LGUI, KC_V, KC_NO },
-    [MOOML]  = { TG(LAYER_3), KC_MOOM },
+    [MOOML]  = { OSL(LAYER_3), KC_MOOM },
     [SNITCH] = { LCAG(KC_M) },
 };
 
@@ -48,9 +48,9 @@ const uint16_t macros[][MACRO_LEN] = {
 /* --------- Layers --------- */
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
-        TO(BT),           M(MOOML),    KC_B,         KC_C,
+        TO(BT),           M(MOOML),    OSL(LAYER_1), KC_C,
         TG(LAYER_1),      LSFT(KC_A),  LSC(KC_DOWN), M(SNITCH),
-        xxxxxxx,          xxxxxxx,     RSC(KC_DOWN), LAG(KC_DOWN)),
+        xxxxxxx,          KC_A,        RSC(KC_DOWN), LAG(KC_DOWN)),
 
     [LAYER_1] = LAYOUT(
         TO(BT),           KC_AT,    KC_LPRN,  KC_RPRN,

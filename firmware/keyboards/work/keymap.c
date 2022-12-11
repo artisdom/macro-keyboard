@@ -53,13 +53,13 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [LAYER_MOOM] = LAYOUT(
         TO(BT),           KC_MOOM,       KC_SPC, M_FUSC,
-        xxxxxxx,          LALT(KC_LEFT), KC_4,   LALT(KC_RGHT),
-        TG(LAYER_MOOM),   LGUI(KC_LEFT), KC_1,   LGUI(KC_RGHT)),
+        xxxxxxx,          LGUI(KC_LEFT), KC_4,   LGUI(KC_RGHT),
+        TG(LAYER_MOOM),   LALT(KC_LEFT), KC_1,   LALT(KC_RGHT)),
 
     [LAYER_2] = LAYOUT(
         xxxxxxx,          xxxxxxx,  xxxxxxx,  xxxxxxx,
         xxxxxxx,          xxxxxxx,  xxxxxxx,  xxxxxxx,
-        xxxxxxx,          xxxxxxx,  xxxxxxx,  xxxxxxx,
+        xxxxxxx,          xxxxxxx,  xxxxxxx,  xxxxxxx),
 
     [BT] = LAYOUT(
         TO(BT),           BT(0),    BT(1),     BT(2),

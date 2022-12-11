@@ -612,6 +612,9 @@ enum internal_special_keycodes {
 // Set default layer - 256 layer max
 #define DF(layer) (QK_DEF_LAYER | ((layer) & 0xFF))
 
+// One-shot layer - 256 layer max
+#define OSL(layer) (QK_ONE_SHOT_LAYER | ((layer) & 0xFF))
+
 
 // Change to BT HOST - 256 hosts max
 #define BT(host)   (QK_BT_HOST | ((host) & 0xFF))

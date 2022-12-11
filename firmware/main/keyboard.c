@@ -99,6 +99,9 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
             case QK_DEF_LAYER ... QK_DEF_LAYER_MAX:
                 layers__set_default_layer(keycode & 0xFF);
                 break;
+            case QK_ONE_SHOT_LAYER ... QK_ONE_SHOT_LAYER_MAX:
+                layers__set_oneshot_layer(keycode & 0xFF);
+                break;
             case QK_BT_HOST ... QK_BT_HOST_MAX:
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_KB_CHANGE_BT_HOST;
@@ -284,6 +287,14 @@ uint8_t *keyboard__check_state() {
 
             uint16_t keycode = keyboard__get_keycode(row, col);
             ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
+
+            // handle oneshot
+            if ((keystate == KEY_DOWN) && (layers__get_oneshot_state() == ONESHOT_START)) {
+                layers__set_oneshot_state(ONESHOT_PRESSED);
+            }
+            if ((keystate == KEY_UP) && (layers__get_oneshot_state() == ONESHOT_PRESSED)) {
+                layers__clear_oneshot_layer();
+            }
 
             uint8_t pos[2] = {row, col};
             keyboard__handle_keycode(keycode, keystate, pos);

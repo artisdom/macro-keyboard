@@ -17,6 +17,9 @@ static const char *TAG = "layers";
 static uint32_t default_layer_state;
 static uint32_t layer_state;
 
+// LLLL LSSS with layer num (5 bits) and state (3 bits)
+static uint8_t  oneshot_layer_state;
+
 
 /* --------- Local Functions --------- */
 static void layers__send_event();
@@ -28,8 +31,8 @@ void layers__init() {
     ESP_LOGI(TAG, "Init layers");
 
     default_layer_state = (1 << DEFAULT_LAYER);
-
     layer_state = default_layer_state;
+    oneshot_layer_state = 0;
 
     if (VIA_ENABLED) {
         dynamic_keymap__init();
@@ -82,6 +85,29 @@ void layers__toggle_layer(uint8_t layer, bool send_event) {
         layers__send_event();
     }
     layers__debug_stack();
+}
+
+
+void layers__set_oneshot_layer(uint8_t layer) {
+    oneshot_layer_state = (layer << 3) | ONESHOT_START;
+    layers__activate_layer(layer, false);
+}
+
+
+void layers__clear_oneshot_layer() {
+    uint8_t oneshot_layer = oneshot_layer_state >> 3;
+    layers__deactivate_layer(oneshot_layer, false);
+    oneshot_layer_state = 0;
+}
+
+
+uint8_t layers__get_oneshot_state() {
+    return oneshot_layer_state & 0b111;
+}
+
+
+void layers__set_oneshot_state(uint8_t state) {
+    oneshot_layer_state |= (state & 0b111);
 }
 
 
