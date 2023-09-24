@@ -83,4 +83,19 @@
     (solder_mask_margin 0.0254) (tstamp 0bd75fc4-14d2-45c0-a47a-ac9dce3782c8))
   (pad "23" thru_hole circle (at -7.51 -13.936) (size 1.4224 1.4224) (drill 0.9) (layers *.Cu *.Mask)
     (solder_mask_margin 0.0254) (tstamp 87fe4799-c5bf-416f-97e6-b023e8854c51))
+  (model "${KIPRJMOD}/Libraries/Macro-Keyboard-footprints.3dshapes/TinyS3.step"
+    (offset (xyz -8.78 18 2.7))
+    (scale (xyz 1 1 1))
+    (rotate (xyz 0 0 90))
+  )
+  (model "${KICAD6_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x11_P2.54mm_Vertical.step"
+    (offset (xyz 7.7 14 2.6))
+    (scale (xyz 1 1 1))
+    (rotate (xyz 0 -180 0))
+  )
+  (model "${KICAD6_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x12_P2.54mm_Vertical.step"
+    (offset (xyz -7.5 14 2.6))
+    (scale (xyz 1 1 1))
+    (rotate (xyz 0 -180 0))
+  )
 )

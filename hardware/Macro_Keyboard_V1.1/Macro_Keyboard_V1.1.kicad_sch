@@ -1343,7 +1343,7 @@
     (property "Value" "SW_Push" (id 1) (at 220.726 132.5879 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H5mm" (id 2) (at 219.456 131.318 0)
+    (property "Footprint" "Macro-Keyboard-footprints:SW_PUSH_6mm_H7.3mm" (id 2) (at 219.456 131.318 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 219.456 131.318 0)
@@ -1362,7 +1362,7 @@
     (property "Value" "SW_Push" (id 1) (at 200.406 132.5879 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H5mm" (id 2) (at 199.136 131.318 0)
+    (property "Footprint" "Macro-Keyboard-footprints:SW_PUSH_6mm_H7.3mm" (id 2) (at 199.136 131.318 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 199.136 131.318 0)
@@ -1823,7 +1823,7 @@
     (property "Value" "SW_Push" (id 1) (at 182.626 132.5879 90)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H5mm" (id 2) (at 178.816 131.318 0)
+    (property "Footprint" "Macro-Keyboard-footprints:SW_PUSH_6mm_H7.3mm" (id 2) (at 178.816 131.318 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 178.816 131.318 0)
@@ -1936,13 +1936,13 @@
       (reference "SW9") (unit 1) (value "Cherry MX") (footprint "Macro-Keyboard-footprints:CherryMX_1.00u_LED")
     )
     (path "/decd62d9-b505-402b-86c5-efa565c0a450"
-      (reference "SW10") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:SW_PUSH_6mm_H5mm")
+      (reference "SW10") (unit 1) (value "SW_Push") (footprint "Macro-Keyboard-footprints:SW_PUSH_6mm_H7.3mm")
     )
     (path "/1faca474-e7d4-4d2f-af5f-3d9e5135f195"
-      (reference "SW11") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:SW_PUSH_6mm_H5mm")
+      (reference "SW11") (unit 1) (value "SW_Push") (footprint "Macro-Keyboard-footprints:SW_PUSH_6mm_H7.3mm")
     )
     (path "/14783d61-38c3-4b25-9775-53ff0f1543c9"
-      (reference "SW12") (unit 1) (value "SW_Push") (footprint "Button_Switch_THT:SW_PUSH_6mm_H5mm")
+      (reference "SW12") (unit 1) (value "SW_Push") (footprint "Macro-Keyboard-footprints:SW_PUSH_6mm_H7.3mm")
     )
     (path "/cc8ba0ca-9a72-4286-909d-907320468d1e"
       (reference "SW13") (unit 1) (value "SW_SPDT") (footprint "Macro-Keyboard-footprints:SK12D07VG4")

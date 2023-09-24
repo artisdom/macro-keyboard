@@ -32,4 +32,9 @@
   (pad "2" thru_hole circle (at 2.54 -5.08) (size 2.2 2.2) (drill 1.5) (layers *.Cu *.Mask) (tstamp 01ebee86-b92e-4a89-a728-b891916d4cf2))
   (pad "3" thru_hole circle (at -1.27 5.08) (size 1.6906 1.6906) (drill 0.9906) (layers *.Cu *.Mask) (tstamp 1973f5ef-1259-4a03-b1e3-8d0f9d70cdf0))
   (pad "4" thru_hole circle (at 1.27 5.08) (size 1.6906 1.6906) (drill 0.9906) (layers *.Cu *.Mask) (tstamp 88ef65a9-d391-4721-bf23-ac88b107822e))
+  (model "${KIPRJMOD}/Libraries/Macro-Keyboard-footprints.3dshapes/CherryMX_1.00u_LED.step"
+    (offset (xyz 7.25 7.25 6))
+    (scale (xyz 1 1 1))
+    (rotate (xyz -90 0 -180))
+  )
 )

@@ -22,4 +22,9 @@
   (pad "3" thru_hole circle (at 2 0) (size 1.308 1.308) (drill 0.8) (layers *.Cu *.Mask) (tstamp 0b4c6799-f0ad-4e00-9cbb-8a0192dcecd4))
   (pad "M1" thru_hole circle (at -4.15 0) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp 41b84b0e-41a8-4060-a671-27daa7fb0884))
   (pad "M2" thru_hole circle (at 4.15 0) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp b606832f-6df1-4b51-978f-cd1ebd2654fc))
+  (model "${KIPRJMOD}/Libraries/Macro-Keyboard-footprints.3dshapes/SK12D07VG4.step"
+    (offset (xyz 0 0 1.5))
+    (scale (xyz 1 1 1))
+    (rotate (xyz -90 0 180))
+  )
 )
