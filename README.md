@@ -91,6 +91,13 @@ Should not be an issue as BLE host changes are supposed to happen without other 
 - BLE local name needs to be less than 15 characters. Otherwise macOS will not show it in the discovery menu.
 
 
+## License
+
+Firmware and Software: MIT
+
+Hardware: CERN-OHL-W v2
+
+
 ## Docs / Referencs
 
 - ESP-IDF [Guide](https://docs.espressif.com/projects/esp-idf/en/v4.4.2/esp32s3/index.html).

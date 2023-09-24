@@ -120,7 +120,7 @@ void dynamic_keymap__reset() {
 
 
 uint16_t dynamic_keymap__get_keycode(uint8_t layer, uint8_t row, uint8_t col) {
-    ESP_LOGD(TAG, "Getting key at layer %d (%d, %d)", layer, row, col);
+    ESP_LOGI(TAG, "Getting key at layer %d (%d, %d)", layer, row, col);
     uint16_t index = dynamic_keymap__get_keycode_index(layer, row, col);
     uint16_t keycode = dyn_keymaps[index];
     return keycode;
@@ -128,7 +128,7 @@ uint16_t dynamic_keymap__get_keycode(uint8_t layer, uint8_t row, uint8_t col) {
 
 
 void dynamic_keymap__set_keycode(uint8_t layer, uint8_t row, uint8_t col, uint16_t keycode) {
-    ESP_LOGD(TAG, "Setting key 0x%x at layer %d (%d, %d)", keycode, layer, row, col);
+    ESP_LOGI(TAG, "Setting key 0x%x at layer %d (%d, %d)", keycode, layer, row, col);
     uint16_t index = dynamic_keymap__get_keycode_index(layer, row, col);
     dyn_keymaps[index] = keycode;
 
@@ -199,7 +199,7 @@ void dynamic_keymap__layers_reset() {
 
 uint16_t dynamic_keymap__get_macro_keycode(uint8_t macro, uint8_t key) {
     uint16_t index = (macro * MACRO_LEN) + key;
-    ESP_LOGD(TAG, "Getting macro %d key: %d -> index: %d = 0x%x", macro, key, index, dyn_macros[index]);
+    ESP_LOGI(TAG, "Getting macro %d key: %d -> index: %d = 0x%x", macro, key, index, dyn_macros[index]);
     return dyn_macros[index];
 }
 

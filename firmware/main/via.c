@@ -65,7 +65,7 @@ void via__hid_receive(uint8_t *data, uint8_t length) {
     uint8_t *command_id   = &(data[0]);
     uint8_t *command_data = &(data[1]);
 
-    ESP_LOGD(TAG, "Received: command id: 0x%02x", *command_id);
+    ESP_LOGI(TAG, "Received command id: 0x%02x", *command_id);
 
     switch (*command_id) {
         case id_get_protocol_version: {
