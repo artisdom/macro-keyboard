@@ -221,6 +221,11 @@ void leds__set_brightness(uint8_t level) {
 }
 
 
+uint8_t leds__get_brightness() {
+    return brightness;
+}
+
+
 void leds__increase_brightness() {
 
     uint8_t new_brightness = brightness;

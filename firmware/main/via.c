@@ -6,6 +6,7 @@
 #include "keymap.h" // to remove
 #include "dynamic_keymap.h"
 #include "memory.h"
+#include "leds.h"
 
 
 /* --------- Local Defines --------- */
@@ -26,9 +27,9 @@ enum via_command_id {
     id_dynamic_keymap_get_keycode           = 0x04, // IMPLEMENTED
     id_dynamic_keymap_set_keycode           = 0x05, // IMPLEMENTED
     id_dynamic_keymap_reset                 = 0x06, // IMPLEMENTED
-    id_lighting_set_value                   = 0x07, // NOT IMPLEMENTED
-    id_lighting_get_value                   = 0x08, // NOT IMPLEMENTED
-    id_lighting_save                        = 0x09, // NOT IMPLEMENTED
+    id_custom_set_value                     = 0x07, // see below
+    id_custom_get_value                     = 0x08, // see below
+    id_custom_save                          = 0x09, // NOT IMPLEMENTED
     id_eeprom_reset                         = 0x0A, // IMPLEMENTED
     id_bootloader_jump                      = 0x0B, // NOT IMPLEMENTED
     id_dynamic_keymap_macro_get_count       = 0x0C, // IMPLEMENTED
@@ -50,9 +51,25 @@ enum via_keyboard_value_id {
     id_switch_matrix_state = 0x03, // NOT IMPLEMENTED
 };
 
+enum via_channel_id {
+    id_custom_channel         = 0, // NOT IMPLEMENTED
+    id_qmk_backlight_channel  = 1, // IMPLEMENTED
+    id_qmk_rgblight_channel   = 2, // NOT IMPLEMENTED
+    id_qmk_rgb_matrix_channel = 3, // NOT IMPLEMENTED
+    id_qmk_audio_channel      = 4, // NOT IMPLEMENTED
+    id_qmk_led_matrix_channel = 5, // NOT IMPLEMENTED
+};
+
+enum via_qmk_backlight_value {
+    id_qmk_backlight_brightness = 1, // IMPLEMENTED
+    id_qmk_backlight_effect     = 2, // NOT IMPLEMENTED
+};
+
 
 /* --------- Local Functions --------- */
 static uint8_t via__get_macro_count();
+static void via__custom_get_value(uint8_t* command_data);
+static void via__custom_set_value(uint8_t* command_data);
 
 
 
@@ -169,7 +186,14 @@ void via__hid_receive(uint8_t *data, uint8_t length) {
             ESP_LOGD(TAG, "offset: %d, size: %d", offset, size);
             dynamic_keymap__set_layers(offset, size, &(command_data[3]));
             break;
-
+        }
+        case id_custom_get_value: {
+            via__custom_get_value(command_data);
+            break;
+        }
+        case id_custom_set_value: {
+            via__custom_set_value(command_data);
+            break;
         }
         default: {
             ESP_LOGW(TAG, "Unhandled command: %d", *command_id);
@@ -185,6 +209,50 @@ void via__hid_receive(uint8_t *data, uint8_t length) {
 
 static uint8_t via__get_macro_count() {
     return MAX_MACRO;
+}
+
+
+static void via__custom_get_value(uint8_t* command_data) {
+    uint8_t channel_id = command_data[0];
+    uint8_t value_id = command_data[1];
+    uint8_t* value_data = &command_data[2];
+
+    ESP_LOGD(TAG, "channel_id; %d, value_id: %d", channel_id, value_id);
+
+    switch (channel_id) {
+        case id_qmk_backlight_channel: {
+            if (value_id == id_qmk_backlight_brightness) {
+                value_data[0] = leds__get_brightness();
+            }
+            break;
+        }
+        default: {
+            ESP_LOGW(TAG, "Unhandled channel id: %d", channel_id);
+        }
+    }
+
+}
+
+
+static void via__custom_set_value(uint8_t* command_data) {
+    uint8_t channel_id = command_data[0];
+    uint8_t value_id = command_data[1];
+    uint8_t* value_data = &command_data[2];
+
+    ESP_LOGD(TAG, "channel_id; %d, value_id: %d", channel_id, value_id);
+
+    switch (channel_id) {
+        case id_qmk_backlight_channel: {
+            if (value_id == id_qmk_backlight_brightness) {
+                leds__set_brightness(value_data[0]);
+            }
+            break;
+        }
+        default: {
+            ESP_LOGW(TAG, "Unhandled channel id: %d", channel_id);
+        }
+    }
+
 }
 
 
