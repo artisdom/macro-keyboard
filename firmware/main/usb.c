@@ -14,6 +14,11 @@
 #include "driver/rtc_io.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
+#include "soc/usb_reg.h"
+#include "soc/rtc_cntl_reg.h"
+#include "esp32s3/rom/usb/usb_device.h"
+#include "esp32s3/rom/usb/usb_persist.h"
+#include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
 
 #include "usb.h"
 #include "config.h"
@@ -45,8 +50,8 @@ QueueHandle_t usb_media_q;
     _PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
 
 // #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
-#define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
-// #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
+// #define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
+#define TUSB_DESC_TOTAL_LEN         (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_HID_INOUT_DESC_LEN + TUD_CDC_DESC_LEN)
 #define HID_REPORT_ID_KEYBOARD   (1)
 #define HID_REPORT_ID_CONSUMER   (2)
 
@@ -92,8 +97,8 @@ enum {
     // Interface numbers
     ITF_NUM_HID = 0,
     ITF_NUM_HID_RAW,
-    // ITF_NUM_CDC,
-    // ITF_NUM_CDC_DATA,
+    ITF_NUM_CDC,
+    ITF_NUM_CDC_DATA,
     ITF_NUM_TOTAL
 };
 
@@ -102,9 +107,16 @@ enum {
     EP_EMPTY = 0,
     EPNUM_0_HID,
     EPNUM_1_HID,
-    // EPNUM_1_CDC_NOTIF,
-    // EPNUM_1_CDC,
+    EPNUM_2_CDC_NOTIF,
+    EPNUM_2_CDC,
 };
+
+
+typedef enum {
+    REBOOT_NONE,
+    REBOOT_NORMAL,
+    REBOOT_BOOTLOADER,
+} reboot_type_t;
 
 
 /* --------- Local Variables --------- */
@@ -112,6 +124,8 @@ static const char *TAG = "usb";
 
 static bool initialized = false;
 static const gpio_num_t usb_bus_gpio = GPIO_NUM_21;
+static int prev_rts_state = 0;
+static reboot_type_t reboot_state = REBOOT_NONE;
 
 static const tusb_desc_device_t descriptor_tinyusb = {
     .bLength = sizeof(descriptor_tinyusb),      // Size of this descriptor in bytes.
@@ -162,10 +176,10 @@ static const uint8_t configuration_descriptor[] = {
     TUD_HID_DESCRIPTOR(ITF_NUM_HID, 4, false, sizeof(hid_report_descriptor), 0x80 | EPNUM_0_HID, 16, 10),
 
     // Interface number, string index, protocol, report descriptor len, EP OUT & IN address, size & polling interval
-    TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID_RAW, 4, false, sizeof(hid_raw_report_descriptor), EPNUM_1_HID, 0x80 | EPNUM_1_HID, 16, 10)
+    TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID_RAW, 4, false, sizeof(hid_raw_report_descriptor), EPNUM_1_HID, 0x80 | EPNUM_1_HID, 16, 10),
 
     // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-    // TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 5, 0x80 | EPNUM_1_CDC_NOTIF, 8, EPNUM_1_CDC, 0x80 | EPNUM_1_CDC, CFG_TUD_CDC_EP_BUFSIZE),
+    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 5, 0x80 | EPNUM_2_CDC_NOTIF, 8, EPNUM_2_CDC, 0x80 | EPNUM_2_CDC, CFG_TUD_CDC_EP_BUFSIZE),
 };
 
 /* --------- Local Functions --------- */
@@ -224,7 +238,49 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     }
 }
 
+void IRAM_ATTR tinyusb_cdc_line_state_changed_callback(int itf, cdcacm_event_t *event)
+{
+    int dtr = event->line_state_changed_data.dtr;
+    int rts = event->line_state_changed_data.rts;
+    ESP_LOGI(TAG, "Line state changed on channel %d: DTR:%d, RTS:%d", itf, dtr, rts);
+    if (!rts && prev_rts_state) {
+        if (dtr) {
+            ESP_LOGW(TAG, "Reboot in bootloader");
+            reboot_state = REBOOT_BOOTLOADER;
+        }
+        else {
+            ESP_LOGW(TAG, "Reboot normal");
+            reboot_state = REBOOT_NORMAL;
+        }
+    }
+    prev_rts_state = rts;
+}
 
+void IRAM_ATTR tinyusb_cdc_callback(int itf, cdcacm_event_t *event) {
+    if (event->type == CDC_EVENT_RX) {
+        ESP_LOGD(TAG, "CDC_EVENT_RX");
+    }
+    else if (event->type == CDC_EVENT_RX_WANTED_CHAR) {
+        ESP_LOGD(TAG, "CDC_EVENT_RX_WANTED_CHAR");
+    }
+    else if (event->type == CDC_EVENT_LINE_CODING_CHANGED) {
+        ESP_LOGD(TAG, "CDC_EVENT_LINE_CODING_CHANGED");
+        prev_rts_state = 0;
+    }
+}
+
+void restart_handler(void) {
+
+    usb_dc_prepare_persist();
+    if (reboot_state == REBOOT_BOOTLOADER) {
+        chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+        REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+    }
+    else if (reboot_state == REBOOT_NORMAL) {
+        chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+    }
+
+}
 
 
 
@@ -250,25 +306,32 @@ void usb__init() {
         }
         initialized = true;
 
-        // tinyusb_config_cdcacm_t acm_cfg = {
-        //     .usb_dev = TINYUSB_USBDEV_0,
-        //     .cdc_port = TINYUSB_CDC_ACM_0,
-        //     .rx_unread_buf_sz = 64,
-        //     .callback_rx = NULL,
-        //     .callback_rx_wanted_char = NULL,
-        //     .callback_line_state_changed = NULL,
-        //     .callback_line_coding_changed = NULL,
-        // };
-        // ret = tusb_cdc_acm_init(&acm_cfg);
-        // if (ret) {
-        //     ESP_LOGE(TAG, "init CDC ACM driver failed");
-        // }
-        // else {
-        //     ret = esp_tusb_init_console(TINYUSB_CDC_ACM_0);
-        //     if (ret) {
-        //         ESP_LOGE(TAG, "init console to redirect output to CDC failed");
-        //     }
-        // }
+        tinyusb_config_cdcacm_t acm_cfg = {
+            .usb_dev = TINYUSB_USBDEV_0,
+            .cdc_port = TINYUSB_CDC_ACM_0,
+            .rx_unread_buf_sz = 64,
+            .callback_rx = &tinyusb_cdc_callback,
+            .callback_rx_wanted_char = &tinyusb_cdc_callback,
+            .callback_line_state_changed = &tinyusb_cdc_line_state_changed_callback,
+            .callback_line_coding_changed = &tinyusb_cdc_callback,
+        };
+        ret = tusb_cdc_acm_init(&acm_cfg);
+        if (ret) {
+            ESP_LOGE(TAG, "init CDC ACM driver failed");
+        } 
+        else {
+            // ret = esp_tusb_init_console(TINYUSB_CDC_ACM_0);
+            // if (ret) {
+            //     ESP_LOGE(TAG, "init console to redirect output to CDC failed");
+            // }
+            // else {
+            //     ESP_LOGI(TAG, "init tusb console");
+            // }
+            // ESP_ERROR_CHECK(tinyusb_cdcacm_register_callback(
+            //             TINYUSB_CDC_ACM_0,
+            //             CDC_EVENT_LINE_STATE_CHANGED,
+            //             &tinyusb_cdc_line_state_changed_callback));
+        }
     }
     tud_connect();
 
@@ -320,8 +383,18 @@ void usb__tinyusb_task(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting tinyusb task");
 
+    esp_err_t ret = esp_register_shutdown_handler(restart_handler);
+        if (ret) {
+            ESP_LOGE(TAG, "Error init shutdown handler");
+        }
+
     while (1) {
         tud_task();
+
+        if (reboot_state != REBOOT_NONE) {
+            ESP_LOGW(TAG, "REBOOOT");
+            esp_restart();
+        }
     }
 }
 

@@ -335,7 +335,7 @@ static void logging_init() {
     // ESP-IDF modules
     esp_log_level_set("*", ESP_LOG_INFO);
     esp_log_level_set("ledc", ESP_LOG_INFO);
-    esp_log_level_set("TinyUSB", ESP_LOG_INFO);
+    esp_log_level_set("TinyUSB", ESP_LOG_DEBUG);
 
     // local modules
     esp_log_level_set("main", ESP_LOG_DEBUG);
@@ -348,7 +348,7 @@ static void logging_init() {
     esp_log_level_set("toggle_switch", ESP_LOG_INFO);
     esp_log_level_set("battery", ESP_LOG_INFO);
     esp_log_level_set("usb", ESP_LOG_DEBUG);
-    esp_log_level_set("via", ESP_LOG_INFO);
+    esp_log_level_set("via", ESP_LOG_DEBUG);
     esp_log_level_set("ble", ESP_LOG_INFO);
     esp_log_level_set("hid_le_prf", ESP_LOG_INFO);
 
