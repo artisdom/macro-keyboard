@@ -48,9 +48,9 @@ const uint16_t macros[][MACRO_LEN] = {
 /* --------- Layers --------- */
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
-        TO(BT),           M(MOOML),    OSL(LAYER_1), KC_C,
-        TG(LAYER_1),      LSFT(KC_A),  LSC(KC_DOWN), M(SNITCH),
-        xxxxxxx,          KC_A,        RSC(KC_DOWN), LAG(KC_DOWN)),
+        TO(BT),           QK_RESTART_USB, QK_RESTART_BOOTLOADER, QK_RESTART_APP,
+        TG(LAYER_1),      LSFT(KC_A),     LSC(KC_DOWN),          M(SNITCH),
+        xxxxxxx,          KC_A,           RSC(KC_DOWN),          LAG(KC_DOWN)),
 
     [LAYER_1] = LAYOUT(
         TO(BT),           KC_AT,    KC_LPRN,  KC_RPRN,

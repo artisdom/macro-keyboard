@@ -533,6 +533,9 @@ enum internal_special_keycodes {
     QK_ONE_SHOT_MOD         = 0x5500,
     QK_ONE_SHOT_MOD_MAX     = 0x55FF,
 
+    QK_DEBUG                = 0x5C00,
+    QK_DEBUG_MAX            = 0x5CFF,
+
     QK_BT_HOST              = 0x6000,
     QK_BT_HOST_MAX          = 0x60FF,
     QK_BT_HOST_RESET        = 0x6100,
@@ -545,6 +548,11 @@ enum internal_special_keycodes {
     // Definitions - can be used directly
     QK_BRIGHTNESS_UP        = 0x7000,
     QK_BRIGHTNESS_DOWN,
+
+    QK_RESTART_APP          = 0x5C00,
+    QK_RESTART_USB,
+    QK_RESTART_BOOTLOADER,
+    QK_RESTART_BOOTLOADER_DFU,
 
 
 };
