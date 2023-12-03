@@ -15,6 +15,17 @@
 #include "esp_sleep.h"
 #include "esp_timer.h"
 
+#include "soc/rtc_cntl_reg.h"
+#include "soc/usb_periph.h"
+#include "soc/periph_defs.h"
+#include "hal/clk_gate_ll.h"
+#include "hal/usb_serial_jtag_ll.h"
+#include "hal/usb_phy_ll.h"
+#include "esp32s3/rom/usb/usb_persist.h"
+#include "esp32s3/rom/usb/usb_dc.h"
+#include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
+
+
 #include "usb.h"
 #include "config.h"
 #include "events.h"
@@ -112,6 +123,8 @@ static const char *TAG = "usb";
 
 static bool initialized = false;
 static const gpio_num_t usb_bus_gpio = GPIO_NUM_21;
+static bool usb_persist_enabled = false;
+static restart_type_t usb_restart_mode = RESTART_USB;
 
 static const tusb_desc_device_t descriptor_tinyusb = {
     .bLength = sizeof(descriptor_tinyusb),      // Size of this descriptor in bytes.
@@ -134,7 +147,7 @@ static const tusb_desc_device_t descriptor_tinyusb = {
 };
 
 // array of pointer to string descriptors
-static tusb_desc_strarray_device_t string_descriptor = {
+static const char* string_descriptor[] = {
     (char[]){0x09, 0x04},                       // 0: supported language is English (0x0409)
     USB_MANUFACTURER_NAME,                      // 1: Manufacturer
     USB_DEVICE_NAME,                            // 2: Product
@@ -407,6 +420,113 @@ void usb__media_task(void *pvParameters) {
     ESP_LOGW(TAG, "Stopping usb media task");
     vTaskDelete(NULL);
 
+}
+
+
+/* --------- Reboot to Bootloader --------- */
+// Functions adapted from esp32 Arduino HAL
+// https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-tinyusb.c
+
+static void usb__hw_cdc_reset_handler(void *arg) {
+    portBASE_TYPE xTaskWoken = 0;
+    uint32_t usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
+    usb_serial_jtag_ll_clr_intsts_mask(usbjtag_intr_status);
+    
+    if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
+        xSemaphoreGiveFromISR((SemaphoreHandle_t)arg, &xTaskWoken);
+    }
+
+    if (xTaskWoken == pdTRUE) {
+        portYIELD_FROM_ISR();
+    }
+}
+
+
+void usb__switch_to_cdc_jtag() {
+
+    ESP_LOGI(TAG, "Switching to HW CDC/JTAG driver");
+
+    // Disable USB-OTG
+    periph_ll_reset(PERIPH_USB_MODULE);
+    //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
+    periph_ll_disable_clk_set_rst(PERIPH_USB_MODULE);
+
+    // Switch to hardware CDC+JTAG
+    CLEAR_PERI_REG_MASK(RTC_CNTL_USB_CONF_REG, (RTC_CNTL_SW_HW_USB_PHY_SEL|RTC_CNTL_SW_USB_PHY_SEL|RTC_CNTL_USB_PAD_ENABLE));
+
+    // Do not use external PHY
+    CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_PHY_SEL);
+
+    // Release GPIO pins from  CDC+JTAG
+    CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_USB_PAD_ENABLE);
+
+    // Force the host to re-enumerate (BUS_RESET)
+    gpio_set_direction(USBPHY_DM_NUM, GPIO_MODE_OUTPUT_OD);
+    gpio_set_direction(USBPHY_DP_NUM, GPIO_MODE_OUTPUT_OD);
+    gpio_set_level(USBPHY_DM_NUM, 0);
+    gpio_set_level(USBPHY_DP_NUM, 0);
+
+    // Initialize CDC+JTAG ISR to listen for BUS_RESET
+    usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
+    intr_handle_t intr_handle = NULL;
+    SemaphoreHandle_t reset_sem = xSemaphoreCreateBinary();
+       if (reset_sem) {
+        if (esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, usb__hw_cdc_reset_handler, reset_sem, &intr_handle) != ESP_OK) {
+            vSemaphoreDelete(reset_sem);
+            reset_sem = NULL;
+            ESP_LOGE(TAG, "HW USB CDC failed to init interrupts");
+        }
+    }
+    else {
+        ESP_LOGE(TAG, "Reset semaphore init failed");
+    }
+
+    // Connect GPIOs to integrated CDC+JTAG
+    SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_USB_PAD_ENABLE);
+
+    // Wait for BUS_RESET to give us back the semaphore
+    if (reset_sem) {
+        if (xSemaphoreTake(reset_sem, 1000 / portTICK_PERIOD_MS) != pdPASS) {
+            ESP_LOGE(TAG, "Reset semaphore timeout");
+        }
+        usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+        esp_intr_free(intr_handle);
+        vSemaphoreDelete(reset_sem);
+    }
+}
+
+
+void IRAM_ATTR usb__shutdown_handler() {
+
+    if(usb_restart_mode >= RESTART_BOOTLOADER){
+        if (usb_persist_enabled) {
+            usb_dc_prepare_persist();
+        }
+        if (usb_restart_mode == RESTART_BOOTLOADER) {
+            // USB CDC Download
+            if (usb_persist_enabled) {
+                chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+            }
+            REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+        }
+        else if (usb_restart_mode == RESTART_BOOTLOADER_DFU) {
+            // DFU Download
+            chip_usb_set_persist_flags(USBDC_BOOT_DFU);
+            REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+        }
+        else if (usb_persist_enabled) {
+            // USB Persist reboot
+            chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+        }
+    }
+}
+
+
+void usb__set_restart_mode(restart_type_t mode) {
+    usb_restart_mode = mode;
 }
 
 

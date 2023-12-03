@@ -17,9 +17,20 @@ typedef enum event_type_e {
     EVENT_BT_CONNECTED,
     EVENT_BT_LEDS_EFFECT_TOGGLE,
     EVENT_USB_PORT,
+    EVENT_RESTART,
 
     EVENT_MAX = 0xFF,
 } event_type_t;
+
+
+typedef enum {
+    RESTART_APP = 0x00,
+    RESTART_USB,
+    RESTART_BOOTLOADER,
+    RESTART_BOOTLOADER_DFU,
+    
+    RESTART_TYPE_MAX = 0xFF,
+} restart_type_t;
 
 
 typedef struct event_s {

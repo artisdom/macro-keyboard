@@ -7,6 +7,7 @@
 #include "dynamic_keymap.h"
 #include "memory.h"
 #include "leds.h"
+#include "events.h"
 
 
 /* --------- Local Defines --------- */
@@ -193,6 +194,14 @@ void via__hid_receive(uint8_t *data, uint8_t length) {
         }
         case id_custom_set_value: {
             via__custom_set_value(command_data);
+            break;
+        }
+        case id_bootloader_jump: {
+            event_t event = {
+                .type = EVENT_RESTART,
+                .data = RESTART_USB
+            };
+            xQueueSend(event_q, (void *) &event, (TickType_t) 0);
             break;
         }
         default: {

@@ -8,6 +8,7 @@
 #include "esp_sleep.h"
 #include "esp_timer.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
 
@@ -46,6 +47,7 @@ static bool usb_connected;
 
 /* --------- Local Functons --------- */
 static void sleep(bool rtc_keyboard, bool rtc_toggle_switch, bool rtc_usb, bool rtc_usb_direction);
+static void restart(restart_type_t type);
 
 
 void keyboard_task(void *parameters) {
@@ -320,6 +322,10 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
+                case EVENT_RESTART: {
+                    restart((restart_type_t) event.data);
+                    break;
+                }
                 default:
                     ESP_LOGW(TAG, "Unhandled event type");
                     break;
@@ -452,6 +458,26 @@ static void sleep(bool rtc_keyboard, bool rtc_toggle_switch, bool rtc_usb, bool 
     ESP_LOGW(TAG, "Going to sleep................!");
     esp_deep_sleep_start();
 
+}
+
+
+static void restart(restart_type_t type) {
+
+    ESP_LOGD(TAG, "Setting up for restart...");
+
+    usb__set_restart_mode(type);
+    if (type >= RESTART_BOOTLOADER) {
+        ESP_ERROR_CHECK(esp_register_shutdown_handler(usb__shutdown_handler));
+        usb__switch_to_cdc_jtag();
+    }
+    if (type == RESTART_USB) {
+        usb__switch_to_cdc_jtag();
+        ESP_LOGW(TAG, "Skipping restart");
+        return;
+    }
+
+    ESP_LOGW(TAG, "Restarting................!");
+    esp_restart();
 }
 
 
