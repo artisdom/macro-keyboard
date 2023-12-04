@@ -495,9 +495,6 @@ enum hid_consumer_control_keycodes {
 // All keycodes corresponding to actions/shortcuts to be performed internally
 #define QK_ACTION      (0x5000)
 
-#define KC_LEDU QK_BRIGHTNESS_UP
-#define KC_LEDD QK_BRIGHTNESS_DOWN
-
 enum internal_special_keycodes {
     // Ranges used in shortcuts - not to be used directly
     QK_BASIC                = 0x0000,
@@ -534,26 +531,30 @@ enum internal_special_keycodes {
     QK_ONE_SHOT_MOD_MAX     = 0x55FF,
 
     QK_DEBUG                = 0x5C00,
-    QK_DEBUG_MAX            = 0x5CFF,
+    QK_DEBUG_MAX            = 0x5C0F,
+    QK_BACKLIGHT            = 0x5CBC,
+    QK_BACKLIGHT_MAX        = 0x5CC2,
 
     QK_BT_HOST              = 0x6000,
     QK_BT_HOST_MAX          = 0x60FF,
     QK_BT_HOST_RESET        = 0x6100,
     QK_BT_HOST_RESET_MAX    = 0x61FF,
 
-    QK_BRIGHTNESS           = 0x7000,
-    QK_BRIGHTNESS_MAX       = 0x70FF,
-
 
     // Definitions - can be used directly
-    QK_BRIGHTNESS_UP        = 0x7000,
-    QK_BRIGHTNESS_DOWN,
+    // Backlight
+    BL_ON                   = 0x5CBC,
+    BL_OFF,                // 0x5CBD
+    BL_DEC,                // 0x5CBE
+    BL_INC,                // 0x5CBF
+    BL_TOGG,               // 0x5CC0
+    // BL_STEP,            // 0x5CC1 Unsupported 
+    // BL_BRTG,            // 0x5CC2 Unsupported
 
-    QK_RESTART_APP          = 0x5C00,
-    QK_RESTART_USB,
-    QK_RESTART_BOOTLOADER,
-    QK_RESTART_BOOTLOADER_DFU,
-
+    QK_RESTART_APP              = 0x5C00,
+    QK_RESTART_USB,            // 0x5C01
+    QK_RESTART_BOOTLOADER,     // 0x5C02
+    QK_RESTART_BOOTLOADER_DFU, // 0x5C03
 
 };
 

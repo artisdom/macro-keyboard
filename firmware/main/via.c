@@ -63,7 +63,7 @@ enum via_channel_id {
 
 enum via_qmk_backlight_value {
     id_qmk_backlight_brightness = 1, // IMPLEMENTED
-    id_qmk_backlight_effect     = 2, // NOT IMPLEMENTED
+    id_qmk_backlight_effect     = 2, // IMPLEMENTED
 };
 
 
@@ -233,6 +233,9 @@ static void via__custom_get_value(uint8_t* command_data) {
             if (value_id == id_qmk_backlight_brightness) {
                 value_data[0] = leds__get_brightness();
             }
+            else if (value_id == id_qmk_backlight_effect) {
+                value_data[0] = leds__get_backlight();
+            }
             break;
         }
         default: {
@@ -254,6 +257,9 @@ static void via__custom_set_value(uint8_t* command_data) {
         case id_qmk_backlight_channel: {
             if (value_id == id_qmk_backlight_brightness) {
                 leds__set_brightness(value_data[0]);
+            }
+            else if (value_id == id_qmk_backlight_effect) {
+                leds__enable_backlight(value_data[0]);
             }
             break;
         }

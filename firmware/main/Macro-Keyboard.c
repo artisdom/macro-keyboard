@@ -284,15 +284,32 @@ void event_handler_task(void *parameters) {
                     }
                     break;
                 }
-                case EVENT_KB_LEDS_BRIGHTNESS: {
+                case EVENT_KB_LEDS: {
                     if (LED_ENABLED) {
-                        if (event.data == 0) {
-                            ESP_LOGI(TAG, "Leds increase brightness");
-                            leds__increase_brightness();
-                        }
-                        else {
-                            ESP_LOGI(TAG, "Leds decrease brightness");
-                            leds__decrease_brightness();
+                        switch (event.data) {
+                            case LEDS_ON:
+                                ESP_LOGD(TAG, "Leds on");
+                                leds__enable_backlight(true);
+                                break;
+                            case LEDS_OFF:
+                                ESP_LOGD(TAG, "Leds off");
+                                leds__enable_backlight(false);
+                                break;
+                            case LEDS_INCREMENT:
+                                ESP_LOGD(TAG, "Leds increase brightness");
+                                leds__increase_brightness();
+                                break;
+                            case LEDS_DECREMENT:
+                                ESP_LOGD(TAG, "Leds decrease brightness");
+                                leds__decrease_brightness();
+                                break;
+                            case LEDS_TOGGLE:
+                                ESP_LOGD(TAG, "Leds toggle");
+                                leds__toggle_backlight();
+                                break;
+                            default:
+                                ESP_LOGE(TAG, "Unrecognised KB_LEDS event data %d", event.data);
+                                break;
                         }
                     }
                     break;

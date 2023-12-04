@@ -120,12 +120,12 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                     ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
                 }
                 break;
-            case QK_BRIGHTNESS ... QK_BRIGHTNESS_MAX:
+            case QK_BACKLIGHT ... QK_BACKLIGHT_MAX:
                 if (keystate == KEY_DOWN) {
-                    event.type = EVENT_KB_LEDS_BRIGHTNESS;
-                    event.data = keycode - QK_BRIGHTNESS; // 0 is up, 1 is down
+                    event.type = EVENT_KB_LEDS;
+                    event.data = keycode - QK_BACKLIGHT; // 0 is up, 1 is down
                     xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                    ESP_LOGD(TAG, "EVENT_LEDS_BRIGHTNESS %d", keycode - QK_BRIGHTNESS);
+                    ESP_LOGD(TAG, "EVENT_LEDS_BACKLIGHT %d", keycode - QK_BACKLIGHT);
                 }
                 break;
             case QK_DEBUG ... QK_DEBUG_MAX:

@@ -65,7 +65,8 @@ static const gpio_num_t col_gpios[LED_COLS] = {GPIO_NUM_36, GPIO_NUM_37, GPIO_NU
 // One channel per column
 static const ledc_channel_t col_channels[LED_COLS] = {LEDC_CHANNEL_0, LEDC_CHANNEL_1, LEDC_CHANNEL_2};
 
-static uint8_t brightness;
+static bool backlight_enabled;        // runtime toggle of leds backlight (not including effects)
+static uint8_t brightness; 
 static TaskHandle_t xLED_task = NULL;
 
 static uint8_t effect_position[2];
@@ -93,6 +94,7 @@ static void leds__gpio_init(uint8_t pin);
 static void leds__ledc_timer_init();
 static void leds__ledc_init(uint8_t pin, uint8_t col_id);
 static bool leds__fade_end_event_cb(const ledc_cb_param_t *param, void *arg);
+static void leds__set_backlight();
 static void leds__open_all();
 static void leds__close_all();
 static void leds__close_columns();
@@ -167,6 +169,7 @@ void leds__init() {
 
     ESP_LOGI(TAG, "Init leds");
 
+    backlight_enabled = true;
     brightness = memory__get_leds_brightness();
 
     // init rows
@@ -199,6 +202,34 @@ void leds__init() {
         xTaskCreatePinnedToCore(leds__task, "leds task", 4096, NULL, configMAX_PRIORITIES, &xLED_task, 1);
     }
 
+}
+
+
+void leds__enable_backlight(bool enable) {
+    backlight_enabled = enable;
+    leds__set_backlight();
+}
+
+
+void leds__toggle_backlight() {
+    backlight_enabled = !backlight_enabled;
+    leds__set_backlight();
+}
+
+
+bool leds__get_backlight() {
+    return backlight_enabled;
+}
+
+
+static void leds__set_backlight() {
+    ESP_LOGD(TAG, "Backlight %d", backlight_enabled);
+    if (backlight_enabled) {
+        leds__open_all();
+    }
+    else {
+        leds__close_all();
+    }
 }
 
 
@@ -380,7 +411,7 @@ void leds__task(void *pvParameters) {
                 leds__open_row(new_effect.row_gpio);
             }
             else if (new_effect.type == NONE) {
-                leds__open_all();
+                leds__set_backlight();
             }
             else {
                 if (effect.row_gpio != new_effect.row_gpio) {
@@ -434,7 +465,7 @@ void leds__task(void *pvParameters) {
                     if (counter >= STATIC_FADE / LEDS_TASK_RATE) {
                         counter = 0;
                         effect.type = NONE;
-                        leds__open_all();
+                        leds__set_backlight();
                     }
                     counter++;
                 }

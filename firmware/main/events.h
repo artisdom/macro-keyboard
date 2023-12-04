@@ -9,7 +9,7 @@
 typedef enum event_type_e {
     EVENT_KB_CHANGE_BT_HOST = 0x01,
     EVENT_KB_RESET_BT_HOST,
-    EVENT_KB_LEDS_BRIGHTNESS,
+    EVENT_KB_LEDS,
     EVENT_LAYERS_CHANGED,
     EVENT_TOGGLE_SWITCH,
     EVENT_BT_ADV,
@@ -23,6 +23,18 @@ typedef enum event_type_e {
 } event_type_t;
 
 
+// Event specific Data values
+// EVENT_KB_LEDS
+typedef enum {
+    LEDS_ON = 0x00,
+    LEDS_OFF,
+    LEDS_INCREMENT,
+    LEDS_DECREMENT,
+    LEDS_TOGGLE,
+} led_control_t;
+
+
+// EVENT_RESTART
 typedef enum {
     RESTART_APP = 0x00,
     RESTART_USB,

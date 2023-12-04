@@ -53,7 +53,7 @@ const uint16_t macros[][MACRO_LEN] = {
 const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
         TO(BT),           MACRO(MOOML),  xxxxxxx,      LCTL(KC_SPC),
-        TG(LAYER_MOOM),   MACRO(COPY),   MACRO(PASTE), M(SNITCH),
+        TG(LAYER_SUBL),   MACRO(COPY),   MACRO(PASTE), M(SNITCH),
         xxxxxxx,          LCTL(KC_LEFT), KC_CC_PLAY,   LCTL(KC_RGHT)
     ),
 
@@ -82,7 +82,7 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [LEDS] = LAYOUT(
-        TO(BT),           KC_LEDD,  KC_LEDU,  xxxxxxx,
+        TO(BT),           BL_DEC,   BL_INC,   xxxxxxx,
         TO(LAYER_0),      _______,  _______,  _______,
         TO(LAYER_0),      _______,  _______,  _______
     ),
