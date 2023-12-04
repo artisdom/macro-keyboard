@@ -284,6 +284,7 @@ void usb__init() {
         // }
     }
     tud_connect();
+    via__init();
 
     usb_keyboard_q = xQueueCreate(32, HID_REPORT_LEN * sizeof(uint8_t));
     usb_media_q = xQueueCreate(32, HID_CC_REPORT_LEN * sizeof(uint8_t));

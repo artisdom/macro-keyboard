@@ -9,3 +9,6 @@ set( COMPONENTS   main keyboards esp_system esp_timer bt esp_adc driver nvs_flas
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(Macro-Keyboard)
+
+# Fix for TinyUSB HID buffer which needs to be the same size as VIA HID report size for the RX callback to work
+idf_build_set_property(COMPILE_OPTIONS "-DCFG_TUD_HID_EP_BUFSIZE=32" APPEND)
