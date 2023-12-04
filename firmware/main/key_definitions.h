@@ -1,7 +1,7 @@
 #ifndef KEY_DEFINITIONS_H
 #define KEY_DEFINITIONS_H
 
-// taken QMK which itself comes from TMK
+// taken from QMK which itself comes from TMK
 
 /*
  * Short names for ease of definition of keymap
@@ -532,8 +532,8 @@ enum internal_special_keycodes {
 
     QK_DEBUG                = 0x5C00,
     QK_DEBUG_MAX            = 0x5C0F,
-    QK_BACKLIGHT            = 0x5CBC,
-    QK_BACKLIGHT_MAX        = 0x5CC2,
+    QK_BACKLIGHT            = 0x5CBB,
+    QK_BACKLIGHT_MAX        = 0x5CC1,
 
     QK_BT_HOST              = 0x6000,
     QK_BT_HOST_MAX          = 0x60FF,
@@ -543,13 +543,13 @@ enum internal_special_keycodes {
 
     // Definitions - can be used directly
     // Backlight
-    BL_ON                   = 0x5CBC,
-    BL_OFF,                // 0x5CBD
-    BL_DEC,                // 0x5CBE
-    BL_INC,                // 0x5CBF
-    BL_TOGG,               // 0x5CC0
-    // BL_STEP,            // 0x5CC1 Unsupported 
-    // BL_BRTG,            // 0x5CC2 Unsupported
+    BL_ON                   = 0x5CBB,
+    BL_OFF,                // 0x5CBC
+    BL_DEC,                // 0x5CBD
+    BL_INC,                // 0x5CBE
+    BL_TOGG,               // 0x5CBF
+    // BL_STEP,            // 0x5CC0 Unsupported 
+    // BL_BRTG,            // 0x5CC1 Unsupported
 
     QK_RESTART_APP              = 0x5C00,
     QK_RESTART_USB,            // 0x5C01
