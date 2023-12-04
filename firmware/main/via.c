@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "leds.h"
 #include "events.h"
+#include "matrix.h"
 
 
 /* --------- Local Defines --------- */
@@ -49,7 +50,7 @@ enum via_command_id {
 enum via_keyboard_value_id {
     id_uptime              = 0x01, // NOT IMPLEMENTED
     id_layout_options      = 0x02, // IMPLEMENTED
-    id_switch_matrix_state = 0x03, // NOT IMPLEMENTED
+    id_switch_matrix_state = 0x03, // IMPLEMENTED
 };
 
 enum via_channel_id {
@@ -99,6 +100,17 @@ void via__hid_receive(uint8_t *data, uint8_t length) {
                     command_data[2] = (value >> 16) & 0xFF;
                     command_data[3] = (value >> 8) & 0xFF;
                     command_data[4] = value & 0xFF;
+                    break;
+                }
+                case id_switch_matrix_state: {
+                    uint8_t i = 1;
+                    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+                        uint8_t value = 0;
+                        for(uint8_t col = 0; col < MATRIX_COLS; col++) {
+                            value |= (matrix_state[row][col] << col);
+                        }
+                        command_data[i++] = value;
+                    }
                     break;
                 }
                 default: {
