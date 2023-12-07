@@ -20,6 +20,7 @@ build-job:
     - ls -lAh ${WORKDIR}/build
     - python ${WORKDIR}/scripts/create_manifest.py
       --file ${WORKDIR}/build/flasher_args.json
+      --path build
       --output ${WORKDIR}/manifest.json
       --version ${CI_COMMIT_SHORT_SHA}
   artifacts:
