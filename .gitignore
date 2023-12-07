@@ -29,7 +29,6 @@ dependencies.lock
 not_components/
 MK32/
 qmk/
-scripts/
 
 
 # Kicad files
