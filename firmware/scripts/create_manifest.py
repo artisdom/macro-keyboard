@@ -57,6 +57,8 @@ if __name__ == "__main__":
     flasher_args = json.load(input_file) 
 
     manifest = create_manifest(flasher_args, args.name, args.version)
+    print("Created manifest:")
+    print(manifest)
 
     output_file = open(args.output, 'w')
     json.dump(manifest, output_file, ensure_ascii=False, indent=4)
