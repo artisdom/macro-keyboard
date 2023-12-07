@@ -18,6 +18,11 @@ build-job:
     - cd ${WORKDIR} && idf.py build
   after_script:
     - ls -lAh ${WORKDIR}/build
+    - |
+      python ${WORKDIR}/scripts/create_manifest.py
+      --file ${WORKDIR}/build/flasher_args.json
+      --output ${WORKDIR}/manifest.json
+      --version ${CI_COMMIT_SHORT_SHA}
     # - mkdir -p packages
     # - cp ./dist/*.dmg packages
     # - cp ./dist/*.exe packages
@@ -26,13 +31,14 @@ build-job:
     # - echo "MACOS_PACKAGE=$(basename ./packages/*.dmg)" >> variables.env
     # - echo "WINDOWS_PACKAGE=$(basename ./packages/*.exe)" >> variables.env
     # - echo "LINUX_PACKAGE=$(basename ./packages/*.AppImage)" >> variables.env
-  # artifacts:
-  #   expire_in: 2 days
-  #   # public: true
-  #   paths:
-  #     - ./packages/
-  #   reports:
-  #     dotenv: variables.env
+  artifacts:
+    expire_in: 2 days
+    # public: true
+    paths:
+      - ${WORKDIR}/build/*.bin
+      - ${WORKDIR}/build/*/*.bin
+      - ${WORKDIR}/build/flash_args
+      - ${WORKDIR}/manifest.json
 
 # upload-job:
 #   stage: release
