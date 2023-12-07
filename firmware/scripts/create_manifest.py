@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 
 
 default_manifest = {
@@ -12,9 +11,9 @@ default_manifest = {
         {
             "chipFamily": "ESP32-S3",
             "parts": [
-                { "path": "bootloader.bin",      "offset": 0 },
-                { "path": "partition-table.bin", "offset": 32768 },
-                { "path": "Macro-Keyboard.bin",  "offset": 65536 }
+                { "path": "bootloader.bin",      "offset": 0x0 },
+                { "path": "partition-table.bin", "offset": 0x8000 },
+                { "path": "Macro-Keyboard.bin",  "offset": 0x10000 }
             ]
         }
     ]
@@ -32,7 +31,7 @@ def create_manifest(input_file, name, version):
 
     for offset, path in files.items():
         part = {
-            "path": os.path.basename(path), # keep only filename
+            "path": path,
             "offset": offset
         }
         manifest["builds"][0]["parts"].append(part)
