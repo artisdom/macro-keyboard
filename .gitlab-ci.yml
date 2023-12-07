@@ -15,9 +15,9 @@ build-job:
   variables:
     WORKDIR: "./firmware"
   script:
-    - cd $WORKDIR && idf.py build
+    - idf.py build
   after_script:
-    - ls -lAh $WORKDIR/build
+    - ls -lAh ./build
     # - mkdir -p packages
     # - cp ./dist/*.dmg packages
     # - cp ./dist/*.exe packages

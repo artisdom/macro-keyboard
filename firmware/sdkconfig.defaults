@@ -1,5 +1,7 @@
 # Default options for project
 
+CONFIG_IDF_TARGET="esp32s3"
+
 #
 # System
 #
