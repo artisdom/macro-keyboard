@@ -29,6 +29,7 @@ dependencies.lock
 not_components/
 MK32/
 qmk/
+manifest.json
 
 
 # Kicad files

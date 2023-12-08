@@ -1,0 +1,38 @@
+stages:         
+  - build
+
+variables:
+    # KEYBOARD_CONFIG: "default" # Only override if needed (otherwise use the default defined in Kconfig or sdkconfig.defaults)
+
+
+build-job:  
+  stage: build
+  tags:
+    - docker
+  image:
+    name: espressif/idf:v5.1.1
+  variables:
+    WORKDIR: "./firmware"
+  before_script:
+    # Override the keyboard config directory used (unables the job to be run manually for different keyboards)
+    - |
+      if [[ -n ${KEYBOARD_CONFIG} ]]; then
+        sed -i "s/.*CONFIG_KEYBOARD_DIR=\".*\"/CONFIG_KEYBOARD_DIR=\"${KEYBOARD_CONFIG}\"/g" ${WORKDIR}/sdkconfig.defaults
+        cat ${WORKDIR}/sdkconfig.defaults    
+      fi
+  script:
+    - cd ${WORKDIR} && idf.py build
+  after_script:
+    - python ${WORKDIR}/scripts/create_manifest.py
+      --file ${WORKDIR}/build/flasher_args.json
+      --path build
+      --output ${WORKDIR}/manifest.json
+      --version ${CI_COMMIT_SHORT_SHA}
+  artifacts:
+    expire_in: 2 days
+    public: true
+    paths:
+      - ${WORKDIR}/build/*.bin
+      - ${WORKDIR}/build/*/*.bin
+      - ${WORKDIR}/build/flash_args
+      - ${WORKDIR}/manifest.json
