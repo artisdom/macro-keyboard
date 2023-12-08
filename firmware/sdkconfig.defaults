@@ -8,7 +8,8 @@ CONFIG_IDF_TARGET="esp32s3"
 #
 # Keyboard Configuration
 #
-CONFIG_KEYBOARD_DIR="work"
+# Variable uncommented by CI to override the keyboard config directory
+# CONFIG_KEYBOARD_DIR="default"
 
 #
 # System
