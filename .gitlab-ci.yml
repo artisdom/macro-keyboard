@@ -2,7 +2,7 @@ stages:
   - build
 
 variables:
-    KEYBOARD_CONFIG: "default"
+    # KEYBOARD_CONFIG: "default" # Only override if needed (otherwise use the default defined in Kconfig or sdkconfig.defaults)
 
 
 build-job:  
@@ -15,8 +15,11 @@ build-job:
     WORKDIR: "./firmware"
   before_script:
     # Override the keyboard config directory used (unables the job to be run manually for different keyboards)
-    - sed -i "s/.*CONFIG_KEYBOARD_DIR=\".*\"/CONFIG_KEYBOARD_DIR=\"${KEYBOARD_CONFIG}\"/g" ${WORKDIR}/sdkconfig.defaults
-    - cat ${WORKDIR}/sdkconfig.defaults
+    - |
+      if [[ -n ${KEYBOARD_CONFIG} ]]; then
+        sed -i "s/.*CONFIG_KEYBOARD_DIR=\".*\"/CONFIG_KEYBOARD_DIR=\"${KEYBOARD_CONFIG}\"/g" ${WORKDIR}/sdkconfig.defaults
+        cat ${WORKDIR}/sdkconfig.defaults    
+      fi
   script:
     - cd ${WORKDIR} && idf.py build
   after_script:
