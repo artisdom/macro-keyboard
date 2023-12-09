@@ -2,9 +2,9 @@
 #define CONFIG_H
 
 /* --------- Global configs --------- */
-#define DEVICE_NAME               "Macro Keyboard" // max 15 chars for macOS
-#define DEEP_SLEEP_ENABLED        (1)
-#define DEEP_SLEEP_TIMEOUT        (300) // in seconds 
+#define DEVICE_NAME               "Macro Dev" // max 15 chars for macOS
+#define DEEP_SLEEP_ENABLED        (0)
+#define DEEP_SLEEP_TIMEOUT        (120) // in seconds 
 #define TOGGLE_SWITCH_ENABLED     (1)
 #define BATTERY_ENABLED           (1)
 #define VIA_ENABLED               (1)
@@ -25,7 +25,7 @@
 
 #define MACRO_LEN                 (3)
 #define MAX_MACRO                 (16) // locked by VIA's crappy macro system
-#define ONESHOT_TIMEOUT           (3)  // in seconds
+#define ONESHOT_TIMEOUT           (3)  // in seconds 
 
 
 /* --------- BLE configs --------- */
