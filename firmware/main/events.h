@@ -28,9 +28,9 @@ typedef enum event_type_e {
 typedef enum {
     LEDS_ON = 0x00,
     LEDS_OFF,
+    LEDS_TOGGLE,
     LEDS_DECREMENT,
     LEDS_INCREMENT,
-    LEDS_TOGGLE,
 } led_control_t;
 
 

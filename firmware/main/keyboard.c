@@ -73,22 +73,22 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
     bool action_performed = false;
     event_t event;
 
-    if (keycode >= QK_ACTION) {
+    if (keycode >= QK_TO) { // QK_TO is 0x5000
         action_performed = true;
 
         switch (keycode) {
-            case QK_TOGGLE_LAYER ... QK_TOGGLE_LAYER_MAX:
+            case QK_TOGGLE_LAYER_RANGE:
                 if (keystate == KEY_DOWN) {
                     layers__toggle_layer(keycode & 0xFF, true);
                 }
                 break;
-            case QK_TO ... QK_TO_MAX:
+            case QK_TO_RANGE:
                 if (keystate == KEY_DOWN) {
                     layers__deactivate_all();
                     layers__activate_layer(keycode & 0xFF, true);
                 }
                 break;
-            case QK_MOMENTARY ... QK_MOMENTARY_MAX:
+            case QK_MOMENTARY_RANGE:
                 if (keystate == KEY_DOWN) {
                     layers__activate_layer(keycode & 0xFF, false);
                 }
@@ -96,13 +96,13 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                     layers__deactivate_layer(keycode & 0xFF, false);
                 }
                 break;
-            case QK_DEF_LAYER ... QK_DEF_LAYER_MAX:
+            case QK_DEF_LAYER_RANGE:
                 layers__set_default_layer(keycode & 0xFF);
                 break;
-            case QK_ONE_SHOT_LAYER ... QK_ONE_SHOT_LAYER_MAX:
+            case QK_ONE_SHOT_LAYER_RANGE:
                 layers__set_oneshot_layer(keycode & 0xFF);
                 break;
-            case QK_BT_HOST ... QK_BT_HOST_MAX:
+            case QK_BT_HOST_RANGE:
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_KB_CHANGE_BT_HOST;
                     event.data = keycode & 0xFF;
@@ -111,7 +111,7 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                     ESP_LOGD(TAG, "EVENT_BT_CHANGE_HOST %d", keycode & 0xFF);
                 }
                 break;
-            case QK_BT_HOST_RESET ... QK_BT_HOST_RESET_MAX:
+            case QK_BT_HOST_RESET_RANGE:
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_KB_RESET_BT_HOST;
                     event.data = keycode & 0xFF;
@@ -120,15 +120,15 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                     ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
                 }
                 break;
-            case QK_BACKLIGHT ... QK_BACKLIGHT_MAX:
+            case QK_LIGHTING_RANGE:
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_KB_LEDS;
-                    event.data = keycode - QK_BACKLIGHT; // 0 is up, 1 is down
+                    event.data = keycode - QK_LIGHTING; // 0 is up, 1 is down
                     xQueueSend(event_q, (void *) &event, (TickType_t) 0);
-                    ESP_LOGD(TAG, "EVENT_LEDS_BACKLIGHT %d", keycode - QK_BACKLIGHT);
+                    ESP_LOGD(TAG, "EVENT_LEDS_BACKLIGHT %d", keycode - QK_LIGHTING);
                 }
                 break;
-            case QK_DEBUG ... QK_DEBUG_MAX:
+            case QK_DEBUG_RANGE:
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_RESTART;
                     event.data = keycode - QK_DEBUG;
@@ -219,7 +219,7 @@ static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate, uint8_t
         }
 
         // media controls
-        if (keycode >= QK_MEDIA && keycode <= QK_MEDIA_MAX) {
+        if (keycode >= QK_CONSUMER && keycode <= QK_CONSUMER_MAX) {
             keyboard__handle_media(keycode, keystate);
             return;
         }
@@ -252,7 +252,7 @@ static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate, uint8_t
         }
 
         // media controls
-        if (keycode >= QK_MEDIA && keycode <= QK_MEDIA_MAX) {
+        if (keycode >= QK_CONSUMER && keycode <= QK_CONSUMER_MAX) {
             keyboard__handle_media(keycode, keystate);
             return;
         }

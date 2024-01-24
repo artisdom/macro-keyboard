@@ -295,6 +295,10 @@ void event_handler_task(void *parameters) {
                                 ESP_LOGD(TAG, "Leds off");
                                 leds__enable_backlight(false);
                                 break;
+                            case LEDS_TOGGLE:
+                                ESP_LOGD(TAG, "Leds toggle");
+                                leds__toggle_backlight();
+                                break;
                             case LEDS_INCREMENT:
                                 ESP_LOGD(TAG, "Leds increase brightness");
                                 leds__increase_brightness();
@@ -302,10 +306,6 @@ void event_handler_task(void *parameters) {
                             case LEDS_DECREMENT:
                                 ESP_LOGD(TAG, "Leds decrease brightness");
                                 leds__decrease_brightness();
-                                break;
-                            case LEDS_TOGGLE:
-                                ESP_LOGD(TAG, "Leds toggle");
-                                leds__toggle_backlight();
                                 break;
                             default:
                                 ESP_LOGE(TAG, "Unrecognised KB_LEDS event data %d", event.data);

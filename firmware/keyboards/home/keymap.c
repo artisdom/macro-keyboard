@@ -82,8 +82,8 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [LEDS] = LAYOUT(
-        TO(BT),           BL_DEC,   BL_INC,   xxxxxxx,
-        TO(LAYER_0),      _______,  _______,  _______,
+        TO(BT),           BL_DOWN   BL_UP,    xxxxxxx,
+        TO(LAYER_0),      BL_ON,    BL_OFF,   BL_TOGG,
         TO(LAYER_0),      _______,  _______,  _______
     ),
 

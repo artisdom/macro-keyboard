@@ -12,7 +12,10 @@
 
 
 /* --------- Local Defines --------- */
-#define VIA_PROTOCOL_VERSION    (0x000B) // = 11
+/* Via's version is v11
+Our version is defined as v1.11 with a 1 byte per number
+*/
+#define VIA_PROTOCOL_VERSION    (0x010B) // = 1.11
 
 // #define MAX_VIA_MACRO        (16)
 

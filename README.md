@@ -106,6 +106,7 @@ Hardware: CERN-OHL-W v2
 - [TinyS3](https://esp32s3.com/index.html#home) board.
 - [Blog](http://blog.komar.be/how-to-make-a-keyboard-the-matrix/) on matrix keyboard design. 
 - QMK [keymaps](https://docs.qmk.fm/#/keymap?id=keymap-and-layers) and [layers](https://docs.qmk.fm/#/feature_layers) documentation.
+- USB HID [usage tables](https://www.usb.org/sites/default/files/hut1_4.pdf)
 
 ### Inspirations
 
