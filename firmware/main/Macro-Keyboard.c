@@ -340,7 +340,12 @@ void event_handler_task(void *parameters) {
                     break;
                 }
                 case EVENT_RESTART: {
-                    restart((restart_type_t) event.data);
+                    if (event.data > 0) {
+                        restart((restart_type_t) event.data);
+                    }
+                    else {
+                        ESP_LOGE(TAG, "Unrecognised EVENT_RESTART event data %d", event.data);
+                    }
                     break;
                 }
                 default:

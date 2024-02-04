@@ -26,7 +26,7 @@ typedef enum event_type_e {
 // Event specific Data values
 // EVENT_KB_LEDS
 typedef enum {
-    LEDS_ON = 0x00,
+    LEDS_ON = 0x01,
     LEDS_OFF,
     LEDS_TOGGLE,
     LEDS_DECREMENT,
@@ -36,7 +36,7 @@ typedef enum {
 
 // EVENT_RESTART
 typedef enum {
-    RESTART_APP = 0x00,
+    RESTART_APP = 0x01,
     RESTART_USB,
     RESTART_BOOTLOADER,
     RESTART_BOOTLOADER_DFU,

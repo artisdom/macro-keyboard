@@ -3,9 +3,9 @@
 
 /*
 File is generated using the keycodes definition json or toml files
-  Generated on: 24-01-2024 18:28:34
+  Generated on: 04-02-2024 13:27:01
   Version: v1.11
-  Git commit (keycodes repository): 408e8af
+  Git commit (keycodes repository): 559666e
 */
 
 enum keycode_ranges {
@@ -294,16 +294,16 @@ enum keycodes {
 	KC_AUDIO_VOL_UP = 0x20E9,
 	KC_AUDIO_VOL_DOWN = 0x20EA,
 	/* backlight */
-	QK_BACKLIGHT_ON = 0x7000,
-	QK_BACKLIGHT_OFF = 0x7001,
-	QK_BACKLIGHT_TOGGLE = 0x7002,
-	QK_BACKLIGHT_DOWN = 0x7003,
-	QK_BACKLIGHT_UP = 0x7004,
+	QK_BACKLIGHT_ON = 0x7001,
+	QK_BACKLIGHT_OFF = 0x7002,
+	QK_BACKLIGHT_TOGGLE = 0x7003,
+	QK_BACKLIGHT_DOWN = 0x7004,
+	QK_BACKLIGHT_UP = 0x7005,
 	/* debug */
-	QK_RESTART_APP  = 0x7100,
-	QK_RESTART_USB  = 0x7101,
-	QK_RESTART_BOOTLOADER = 0x7102,
-	QK_RESTART_BOOTLOADER_DFU = 0x7103,
+	QK_RESTART_APP  = 0x7101,
+	QK_RESTART_USB  = 0x7102,
+	QK_RESTART_BOOTLOADER = 0x7103,
+	QK_RESTART_BOOTLOADER_DFU = 0x7104,
 
 
 	// Aliases
@@ -451,6 +451,7 @@ enum keycodes {
 	/* debug */
 	QK_REST = QK_RESTART_APP,
 	QK_RAPP = QK_RESTART_APP,
+	QK_RBT  = QK_RESTART_APP,
 	QK_RUSB = QK_RESTART_USB,
 	QK_BOOT = QK_RESTART_BOOTLOADER,
 	QK_BOOD = QK_RESTART_BOOTLOADER_DFU,
