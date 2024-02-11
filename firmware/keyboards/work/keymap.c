@@ -55,7 +55,7 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT(
         TO(BT),           MACRO(MOOML),  xxxxxxx,      xxxxxxx,
         TG(LAYER_SUBL),   MACRO(COPY),   MACRO(PASTE), M(SNITCH),
-        xxxxxxx,          LCTL(KC_LEFT), KC_CC_PLAY,   LCTL(KC_RGHT)
+        xxxxxxx,          LCTL(KC_LEFT), KC_PLPS,   LCTL(KC_RGHT)
     ),
     
     [LAYER_SUBL] = LAYOUT(
@@ -83,8 +83,8 @@ const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [LEDS] = LAYOUT(
-        TO(BT),           BL_DEC,   BL_INC,   xxxxxxx,
-        TO(LAYER_0),      _______,  _______,  _______,
+        TO(BT),           BL_DOWN,  BL_UP,    xxxxxxx,
+        TO(LAYER_0),      BL_ON,    BL_OFF,   BL_TOGG,
         TO(LAYER_0),      _______,  _______,  _______
     ),
 
