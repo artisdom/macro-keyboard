@@ -542,12 +542,13 @@ void ble__battery_task(void *pvParameters) {
         if (ble_media_q != NULL) {
             //pend on MQ, if timeout triggers, just wait again.
             if (xQueueReceive(ble_battery_q, &battery_report, (TickType_t) 100)) {
-                //if we are not connected, discard.
-                if (sec_conn == false)
-                    continue;
                 ESP_LOGD(TAG, "battery report: %d%%", battery_report);
                 esp_ble_gatts_set_attr_value(42, sizeof(uint8_t), &battery_report);
-                esp_ble_gatts_send_indicate(hidd_le_env.gatt_if, hid_conn_id, 42, sizeof(uint8_t), &battery_report, false);
+                //Only send if we are connected
+                if (sec_conn) {
+                    ESP_LOGD(TAG, "Sending battey report");
+                    esp_ble_gatts_send_indicate(hidd_le_env.gatt_if, hid_conn_id, 42, sizeof(uint8_t), &battery_report, false);
+                }
             }
         }
         else {
