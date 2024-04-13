@@ -324,6 +324,10 @@ void ble__init(void) {
     ble_battery_q = xQueueCreate(32, sizeof(uint8_t));
     ble_event_q = xQueueCreate(32, sizeof(bt_event_t));
 
+    // set host to connect to
+    current_host_id = ble__get_last_host();
+    ble__set_host(current_host_id);
+
     // ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
     if (initialized == false) {
@@ -359,11 +363,6 @@ void ble__init(void) {
     if((ret = esp_hidd_profile_init()) != ESP_OK) {
         ESP_LOGE(TAG, "%s init hidd profile failed\n", __func__);
     }
-
-    // set host to connect to
-    // current_host_id = memory__get_bluetooth_last_host();
-    current_host_id = ble__get_last_host();
-    ble__set_host(current_host_id);
 
     // register the callback function to the gap module
     esp_ble_gap_register_callback(ble__gap_event_handler);

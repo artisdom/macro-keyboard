@@ -14,8 +14,6 @@ uint8_t leds__get_brightness();
 void    leds__increase_brightness();
 void    leds__decrease_brightness();
 
-void    leds__update_effect_position(uint8_t position[2]);
-
 void    leds__task(void *pvParameters);
 
 

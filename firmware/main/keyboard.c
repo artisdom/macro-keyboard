@@ -32,9 +32,9 @@ extern QueueHandle_t media_q;
 /* --------- Local Functions --------- */
 static inline uint16_t keyboard__get_keycode(uint8_t row, uint8_t col);
 static uint16_t keyboard__check_modifier(uint16_t keycode);
-static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t position[2]);
+static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate);
 static void keyboard__handle_media(uint16_t keycode, uint8_t keystate);
-static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate, uint8_t position[2]);
+static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate);
 static void keyboard__add_key(uint8_t keycode);
 static void keyboard__remove_key(uint8_t keycode);
 
@@ -68,7 +68,7 @@ static uint16_t keyboard__check_modifier(uint16_t keycode) {
 }
 
 
-static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t position[2]) {
+static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate) {
 
     bool action_performed = false;
     event_t event;
@@ -106,7 +106,6 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_KB_CHANGE_BT_HOST;
                     event.data = keycode & 0xFF;
-                    leds__update_effect_position(position);
                     xQueueSend(event_q, (void *) &event, (TickType_t) 0);
                     ESP_LOGD(TAG, "EVENT_BT_CHANGE_HOST %d", keycode & 0xFF);
                 }
@@ -115,7 +114,6 @@ static bool keyboard__handle_action(uint16_t keycode, uint8_t keystate, uint8_t 
                 if (keystate == KEY_DOWN) {
                     event.type = EVENT_KB_RESET_BT_HOST;
                     event.data = keycode & 0xFF;
-                    leds__update_effect_position(position);
                     xQueueSend(event_q, (void *) &event, (TickType_t) 0);
                     ESP_LOGD(TAG, "EVENT_BT_RESET_HOST %d", keycode & 0xFF);
                 }
@@ -196,9 +194,9 @@ static void keyboard__remove_key(uint8_t keycode) {
 }
 
 
-static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate, uint8_t position[2]) {
+static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate) {
 
-    if (keyboard__handle_action(keycode, keystate, position) == true) {
+    if (keyboard__handle_action(keycode, keystate) == true) {
         return;
     }
 
@@ -213,7 +211,7 @@ static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate, uint8_t
 
             for (uint8_t i = 0; i < MACRO_LEN; i++) {
                 key = layers__get_macro_keycode(macro_id, i);
-                keyboard__handle_keycode(key, keystate, position);
+                keyboard__handle_keycode(key, keystate);
             }
             return;
         }
@@ -246,7 +244,7 @@ static void keyboard__handle_keycode(uint16_t keycode, uint8_t keystate, uint8_t
 
             for (uint8_t i = MACRO_LEN; i > 0; i--) {
                 key = layers__get_macro_keycode(macro_id, i - 1);
-                keyboard__handle_keycode(key, keystate, position);
+                keyboard__handle_keycode(key, keystate);
             }
             return;
         }
@@ -309,8 +307,7 @@ uint8_t *keyboard__check_state() {
                 layers__clear_oneshot_layer();
             }
 
-            uint8_t pos[2] = {row, col};
-            keyboard__handle_keycode(keycode, keystate, pos);
+            keyboard__handle_keycode(keycode, keystate);
 
             // ESP_LOGD(TAG, "state: [%d] [%d] 0x%x %d", row, col, keycode, keystate);
             // ESP_LOGD(TAG, "hid report len: %d %d", hid_report_index, report_index);

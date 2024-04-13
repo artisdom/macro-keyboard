@@ -319,7 +319,7 @@ void event_handler_task(void *parameters) {
                 case EVENT_BT_CONNECTED:
                 case EVENT_LAYERS_CHANGED: {
                     if (LED_ENABLED && LED_BT_EFFECTS_ENABLED) {
-                        ESP_LOGI(TAG, "Leds FX event");
+                        ESP_LOGI(TAG, "Leds FX event, host: %d", event.data);
                         xQueueSend(leds_q, &event, (TickType_t) 0);
                     }
                     break;
